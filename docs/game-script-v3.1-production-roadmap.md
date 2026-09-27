@@ -52,7 +52,7 @@ This milestone makes the 30-mission story progression playable as a development 
 - Flutter mission-result tests: 3 passed.
 - Flutter static analysis: no issues.
 - Unity device export and native `UnityFramework`: passed; Mach-O platform is `IOS`, minimum iOS 15.0.
-- Flutter/Xcode debug device build: passed at `build/ios/iphoneos/Runner.app` for `com.udeanmbano.harareAfterHours`. Local deep signature verification still reports the existing `CSSMERR_TP_NOT_TRUSTED` certificate-chain condition.
+- Flutter/Xcode debug device build: passed at `build/ios/iphoneos/Runner.app` for `com.weighty.harareAfterHours`. Local deep signature verification still reports the existing `CSSMERR_TP_NOT_TRUSTED` certificate-chain condition.
 - Physical device gate: release build installed and launched on `Udean’s iPhone` (iPhone 13 Pro Max); Xcode confirmed the `Runner` process remained active.
 
 ### M01 realism pass
