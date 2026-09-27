@@ -5,7 +5,7 @@ set -euo pipefail
 
 script_dir=${0:A:h}
 project_root=${script_dir:h}
-unity_project=${UNITY_PROJECT:-"${project_root}/unity"}
+unity_project=${UNITY_PROJECT:-"${project_root}/unity/unity_game"}
 unity_editor=${UNITY_EDITOR:-/Applications/Unity/Hub/Editor/6000.3.24f1/Unity.app/Contents/MacOS/Unity}
 flutter_bin=${FLUTTER_BIN:-/Users/udeanmbano/Development/flutter/bin/flutter}
 unity_export="${project_root}/ios/UnityLibrary"

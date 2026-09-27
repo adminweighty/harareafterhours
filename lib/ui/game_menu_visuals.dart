@@ -172,11 +172,12 @@ class MenuActionCard extends StatefulWidget {
     required this.subtitle,
     required this.onTap,
     this.primary = false,
+    this.compact = false,
   });
   final IconData icon;
   final String title, subtitle;
   final VoidCallback? onTap;
-  final bool primary;
+  final bool primary, compact;
   @override
   State<MenuActionCard> createState() => _MenuActionCardState();
 }
@@ -200,7 +201,7 @@ class _MenuActionCardState extends State<MenuActionCard> {
             color: widget.primary
                 ? (enabled ? GameTheme.amber : const Color(0xFF596468))
                 : (_hover ? const Color(0xFF253B3D) : const Color(0xEE152428)),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(widget.compact ? 14 : 18),
             border: Border.all(
               color: widget.primary
                   ? GameTheme.amber.withValues(alpha: .5)
@@ -212,20 +213,23 @@ class _MenuActionCardState extends State<MenuActionCard> {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(widget.compact ? 14 : 18),
               onTap: widget.onTap,
               onHover: (v) => setState(() => _hover = v),
               onHighlightChanged: (v) => setState(() => _pressed = v),
               child: Padding(
-                padding: EdgeInsets.all(widget.primary ? 20 : 16),
+                padding: EdgeInsets.symmetric(
+                  horizontal: widget.compact ? 14 : (widget.primary ? 20 : 16),
+                  vertical: widget.compact ? 12 : (widget.primary ? 20 : 16),
+                ),
                 child: Row(
                   children: [
                     Icon(
                       widget.icon,
                       color: enabled ? color : color.withValues(alpha: .45),
-                      size: 25,
+                      size: widget.compact ? 21 : 25,
                     ),
-                    const SizedBox(width: 14),
+                    SizedBox(width: widget.compact ? 10 : 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,18 +240,20 @@ class _MenuActionCardState extends State<MenuActionCard> {
                               color: enabled
                                   ? color
                                   : color.withValues(alpha: .5),
-                              fontSize: widget.primary ? 20 : 15,
+                              fontSize: widget.compact
+                                  ? (widget.primary ? 17 : 14)
+                                  : (widget.primary ? 20 : 15),
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: widget.compact ? 2 : 4),
                           Text(
                             widget.subtitle,
                             style: TextStyle(
                               color: widget.primary
                                   ? color.withValues(alpha: .8)
                                   : const Color(0xFFA6BBBD),
-                              fontSize: 12,
+                              fontSize: widget.compact ? 11 : 12,
                               height: 1.4,
                             ),
                           ),

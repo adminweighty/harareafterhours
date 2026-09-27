@@ -382,7 +382,7 @@ namespace HarareAfterHours
         private void BuildThreatIndicator(Transform target)
         {
             _runnerThreatIndicator = HostileIndicator.CreateMarkerVisual(target, "Mission thief red indicator");
-            _runnerThreatIndicator.localPosition = new Vector3(0, 2.65f, 0);
+            _runnerThreatIndicator.localPosition = new Vector3(0, 3.0f, 0);
             _runnerThreatIndicator.localScale = Vector3.one * 1.2f;
         }
 

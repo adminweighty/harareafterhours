@@ -12,7 +12,7 @@ reflection response; there is no displacement geometry or extra collision mesh.
 Maps use mipmaps, repeat wrapping, trilinear filtering, 4x anisotropy and mobile
 ASTC 6x6 compression. The existing shared Asphalt material is retained.
 
-Unity sources are in `unity/Assets/Environment/Textures/PhotographicAsphalt`.
+Unity sources are in `unity/unity_game/Assets/Environment/Textures/PhotographicAsphalt`.
 Run `HarareAfterHours.EditorTools.GroundSurfaceInstaller.Install` to reproduce
 the material setup. Other surfaces still use the existing reference-led atlas.
 Road geometry, markings, collisions, vehicles and gameplay scripts are unchanged.

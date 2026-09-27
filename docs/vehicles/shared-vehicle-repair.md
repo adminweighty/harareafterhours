@@ -2,7 +2,7 @@
 
 ## What changed
 
-All four active city cars now instantiate `Assets/Resources/HarareVehicles/Prefabs/SharedSUV.prefab` in the existing Unity project at `unity`. They share geometry, wheel rig, collision setup and materials, with per-instance paint colours. `VehicleAppearance.SetAppearance(Color, Texture2D)` supports body-texture variants without duplicating the base model. Existing legacy car assets were retained.
+All four active city cars now instantiate `Assets/Resources/HarareVehicles/Prefabs/SharedSUV.prefab` in the existing Unity project at `unity/unity_game`. They share geometry, wheel rig, collision setup and materials, with per-instance paint colours. `VehicleAppearance.SetAppearance(Color, Texture2D)` supports body-texture variants without duplicating the base model. Existing legacy car assets were retained.
 
 The base is the supplied Mercedes GLS Blender source in `car-prototype/source/mercedes_gls`, not a newly downloaded vehicle. It is normalized to 5.207 metres long. The export separates four wheels, transparent windows and material categories; welds coincident vertices; preserves UVs; applies simplified geometry and weighted normals. Previously the export and material assignment collapsed nearly every surface into body paint.
 

@@ -49,7 +49,7 @@ namespace HarareAfterHours
             }
             Transform anchor = _head != null ? _head : transform;
             // Keep the chevron clear of hair, hats and the HUD label on varied rigs.
-            _visual.position = anchor.position + Vector3.up * (_head != null ? .72f : 2.45f);
+            _visual.position = anchor.position + Vector3.up * (_head != null ? 1.05f : 2.80f);
             Vector3 toCamera = camera.transform.position - _visual.position;
             toCamera.y = 0f;
             if (toCamera.sqrMagnitude > .001f) _visual.rotation = Quaternion.LookRotation(toCamera.normalized, Vector3.up);

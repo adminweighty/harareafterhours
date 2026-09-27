@@ -51,7 +51,7 @@ This does **not** establish Xbox-equivalent graphics or performance. It does not
 
 ## Assets / locations
 
-- Editor generator: `unity/Assets/Editor/CityExpansionInstaller.cs`
+- Editor generator: `unity/unity_game/Assets/Editor/CityExpansionInstaller.cs`
 - Runtime: `ExpandedCity`, `CityTimeTrial`, `CityGraphics` in the existing Unity `Assets/Scripts` folder.
 - Prefabs/settings: `Assets/Resources/HarareEnvironment/CityExpansion/` — AvenueOffice, CBDShopBlock, GardenOffice, AvondaleEntrance, AvondalePalm, AvenueJacaranda, Balanced, High, CityGrade and PhotographicSky.
 - Combined meshes/materials/credits: `Assets/Environment/CityExpansion/`.

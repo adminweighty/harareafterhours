@@ -124,7 +124,7 @@ namespace HarareAfterHours
             {
                 if(actor.Officer||actor.Down||!actor.isActiveAndEnabled)continue;
                 float distance=Vector3.Distance(_player.transform.position,actor.transform.position);
-                Vector3 screen=camera.WorldToScreenPoint(actor.transform.position+Vector3.up*2.55f);
+                Vector3 screen=camera.WorldToScreenPoint(actor.transform.position+Vector3.up*2.9f);
                 bool behind=screen.z<=0;
                 if(behind){screen.x=Screen.width-screen.x;screen.y=Screen.height-screen.y;}
                 float halfWidth=78*s;

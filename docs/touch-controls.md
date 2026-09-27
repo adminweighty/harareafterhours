@@ -29,7 +29,7 @@ Independent finger ownership supports movement, camera and actions together. Gam
 
 `TouchControlsValidation.Run` passed analog/dead-zone checks, button hit-region checks, live character movement driven through the pointer router, simultaneous move/look/jump routing, sprint, no slide-to-fire, release and cancellation checks. It does not simulate physical capacitive touch hardware. Physical-device ergonomics, final visual layout, and live driving gestures remain to be checked; the Mac was locked during this pass.
 
-Code: `unity/Assets/Scripts/TouchGameplayControls.cs`, with integrations in `GameplayHud`, `ThirdPersonCameraRig`, and `MobileControls`. Logs and pre-edit backups: `/private/tmp/harare-touch-controls/`.
+Code: `unity/unity_game/Assets/Scripts/TouchGameplayControls.cs`, with integrations in `GameplayHud`, `ThirdPersonCameraRig`, and `MobileControls`. Logs and pre-edit backups: `/private/tmp/harare-touch-controls/`.
 
 Existing vehicle regression also passed with the new controller enabled: acceleration, steering, reverse/braking, safe exits, passenger ride/drop-off, ambient-car takeover, delivery mission and pedestrian count. These exercise vehicle gameplay but do not substitute for a physical multi-touch driving test. Saved test reports are in `docs/gameplay/touch-controls/`.
 

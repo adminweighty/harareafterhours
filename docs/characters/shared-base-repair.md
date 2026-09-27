@@ -1,6 +1,6 @@
 # Shared character repair — 23 September 2026
 
-All 24 cast roles now use the same fitted Character01 mesh, proportions, Humanoid rig, materials and locomotion controller. This patches the existing Unity project at `unity`; it does not replace the city or Flutter application.
+All 24 cast roles now use the same fitted Character01 mesh, proportions, Humanoid rig, materials and locomotion controller. This patches the existing Unity project at `unity/unity_game`; it does not replace the city or Flutter application.
 
 ## What was wrong
 

@@ -6,8 +6,9 @@ syncing. Local API runs use SQLite; the Docker stack continues to use PostgreSQL
 
 ## Unity project
 
-The editable Unity 6 project is versioned with the app in [`unity/`](unity/). Open
-that directory in Unity Hub with Unity `6000.3.24f1`. Git tracks `Assets`,
+The editable Unity 6 project is versioned with the app in
+[`unity/unity_game/`](unity/unity_game/). Open that directory in Unity Hub with
+Unity `6000.3.24f1`. Git tracks `Assets`,
 `Packages`, and `ProjectSettings`; Unity regenerates `Library`, `Logs`,
 `UserSettings`, and platform build exports locally.
 
@@ -17,8 +18,8 @@ After changing Unity gameplay, refresh the embedded iOS export and framework:
 zsh tool/prepare_ios_device.sh
 ```
 
-The script uses the repository's `unity/` project by default. `UNITY_PROJECT` can
-still override it when diagnosing a separate checkout.
+The script uses the repository's `unity/unity_game/` project by default.
+`UNITY_PROJECT` can still override it when diagnosing a separate checkout.
 
 ## Run the Flutter app
 

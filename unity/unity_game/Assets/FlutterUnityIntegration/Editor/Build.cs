@@ -19,10 +19,10 @@ namespace FlutterUnityIntegration.Editor
         private static readonly string ProjectPath = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         private static readonly string APKPath = Path.Combine(ProjectPath, "Builds/" + Application.productName + ".apk");
 
-        // This Unity project lives alongside StudioProjects rather than inside
-        // <flutter-project>/unity. Keep all Unity-as-a-Library exports pointed
-        // at the Harare After Hours Flutter host from one explicit location.
-        private static readonly string FlutterProjectPath = Path.GetFullPath(Path.Combine(ProjectPath, "../StudioProjects/harareafterhours"));
+        // The Unity project lives at <flutter-project>/unity/unity_game.
+        // Resolve the Flutter host relative to the checkout so exports remain
+        // portable across developers and CI machines.
+        private static readonly string FlutterProjectPath = Path.GetFullPath(Path.Combine(ProjectPath, "../.."));
         private static readonly string AndroidExportPath = Path.Combine(FlutterProjectPath, "android/unityLibrary");
         private static readonly string WindowsExportPath = Path.Combine(FlutterProjectPath, "windows/unityLibrary/data");
         private static readonly string IOSExportPath = Path.Combine(FlutterProjectPath, "ios/UnityLibrary");

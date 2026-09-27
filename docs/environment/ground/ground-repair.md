@@ -19,7 +19,7 @@ The supplied folder already existed in Unity's reference library. For this surfa
 
 The built-in image-generation tool created [harare-surfaces-atlas.png](harare-surfaces-atlas.png). The complete prompt is retained in [generation-prompt.txt](generation-prompt.txt). No original reference image was overwritten.
 
-Unity project: `unity`.
+Unity project: `unity/unity_game`.
 
 - `Assets/Environment/Textures/HarareSurfaceAtlas.png`: unchanged generated atlas, imported by Unity as four independent texture-array slices.
 - `Assets/Environment/Shaders/HarareWorldSurface.shader`: URP-lit world-space surface shader with shadows, fog, shared material parameters and instancing variants.

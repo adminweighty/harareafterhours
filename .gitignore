@@ -52,26 +52,26 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Unity editor project (source lives in /unity)
-/unity/[Ll]ibrary/
-/unity/[Tt]emp/
-/unity/[Oo]bj/
-/unity/[Bb]uild/
-/unity/[Bb]uilds/
-/unity/[Ll]ogs/
-/unity/[Uu]ser[Ss]ettings/
-/unity/[Mm]emoryCaptures/
-/unity/[Rr]ecordings/
-/unity/.vs/
-/unity/.vscode/
-/unity/*.csproj
-/unity/*.sln
-/unity/*.slnx
-/unity/*.user
-/unity/*.pidb
-/unity/*.booproj
-/unity/*.tmp
-/unity/mono_crash.*.json
+# Unity editor project (source lives in /unity/unity_game)
+/unity/*/[Ll]ibrary/
+/unity/*/[Tt]emp/
+/unity/*/[Oo]bj/
+/unity/*/[Bb]uild/
+/unity/*/[Bb]uilds/
+/unity/*/[Ll]ogs/
+/unity/*/[Uu]ser[Ss]ettings/
+/unity/*/[Mm]emoryCaptures/
+/unity/*/[Rr]ecordings/
+/unity/*/.vs/
+/unity/*/.vscode/
+/unity/*/*.csproj
+/unity/*/*.sln
+/unity/*/*.slnx
+/unity/*/*.user
+/unity/*/*.pidb
+/unity/*/*.booproj
+/unity/*/*.tmp
+/unity/*/mono_crash.*.json
 
 # Generated Unity exports embedded by Flutter builds
 /android/unityLibrary/

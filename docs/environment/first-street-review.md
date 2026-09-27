@@ -1,6 +1,6 @@
 # Harare environment — area 01: First Street reference frontage
 
-Source Unity project: `unity`. Existing production scene: `Assets/Scenes/SampleScene.unity`.
+Source Unity project: `unity/unity_game`. Existing production scene: `Assets/Scenes/SampleScene.unity`.
 
 [Before, pavement view](first-street/before-pavement.png) · [After, pavement view](first-street/after-pavement.png) · [After, corner view](first-street/after-corner.png)
 

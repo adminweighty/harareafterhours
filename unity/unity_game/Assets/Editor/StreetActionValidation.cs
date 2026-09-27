@@ -46,7 +46,7 @@ namespace HarareAfterHours.EditorTools
                         if(rig!=null)rig.enabled=false;
                         camera.transform.SetPositionAndRotation(new Vector3(120,1.6f,116),Quaternion.LookRotation(new Vector3(0,-.12f,1)));
                         Physics.SyncTransforms();indicator.Refresh();
-                        Check(indicator.IsVisible&&indicator.IndicatorPosition.y>indicatorActor.transform.position.y+1.6f,"Visible robber has a red marker above its head");
+                        Check(indicator.IsVisible&&indicator.IndicatorPosition.y>indicatorActor.transform.position.y+2.0f,"Visible robber has clear space below its red marker");
                         var markerRenderer=indicatorActor.GetComponentsInChildren<MeshRenderer>().FirstOrDefault(r=>r.gameObject.name=="Hostile red indicator");
                         Check(markerRenderer!=null&&markerRenderer.sharedMaterial!=null&&markerRenderer.sharedMaterial.shader.name!="Hidden/InternalErrorShader","Robber indicator uses a supported red material");
                         Color markerColor=markerRenderer.sharedMaterial.HasProperty("_BaseColor")?markerRenderer.sharedMaterial.GetColor("_BaseColor"):markerRenderer.sharedMaterial.color;
