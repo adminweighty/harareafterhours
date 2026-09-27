@@ -24,9 +24,9 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<!-- Google sample app ID. Replace before publishing to the App Store. -->
+	<!-- Harare Nights iOS AdMob application ID. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-9904839460127820~6006760240</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict><key>SKAdNetworkIdentifier</key><string>cstr6suwn9.skadnetwork</string></dict>
