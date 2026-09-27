@@ -120,6 +120,27 @@ namespace HarareAfterHours
                     case "set_graphics":
                         CityGraphics.Instance?.Apply(command.payload);
                         break;
+                    case "request_audio_state":
+                        PublishAudioState();
+                        break;
+                    case "set_audio_muted":
+                        if (bool.TryParse(command.payload, out bool muted))
+                        {
+                            HarareAfterHoursBootstrap.Instance?.ArtLibrary?.SetSoundMuted(muted);
+                            PublishAudioState();
+                        }
+                        break;
+                    case "set_audio_shuffle":
+                        if (bool.TryParse(command.payload, out bool shuffle))
+                        {
+                            HarareAfterHoursBootstrap.Instance?.ArtLibrary?.SetShuffleEnabled(shuffle);
+                            PublishAudioState();
+                        }
+                        break;
+                    case "randomize_soundtrack":
+                        HarareAfterHoursBootstrap.Instance?.ArtLibrary?.RandomizeTrack();
+                        PublishAudioState();
+                        break;
                     case "set_difficulty":
                         if(StreetActionDirector.Instance?.SetDifficulty(command.payload)==true)
                             Publish("difficulty_changed", "{\"difficulty\":\""+StreetActionDirector.Instance.DifficultyLevel+"\"}");
@@ -149,6 +170,12 @@ namespace HarareAfterHours
         public void PublishGuidance()
         {
             if (_mission != null) Publish("player_guidance", JsonUtility.ToJson(PlayerGuidance.For(_mission)));
+        }
+
+        private void PublishAudioState()
+        {
+            HarareArtLibrary library = HarareAfterHoursBootstrap.Instance?.ArtLibrary;
+            if (library != null) Publish("audio_state", library.AudioStateJson);
         }
 
         private void PublishMissionStatus()

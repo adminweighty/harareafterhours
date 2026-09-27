@@ -87,6 +87,7 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
   Timer? _readinessPoll;
   Timer? _resultTimer;
   final _guidance = ValueNotifier<PlayerGuidance>(const PlayerGuidance());
+  final _audioRevision = ValueNotifier<int>(0);
   MissionResult? _latestResult;
   bool _ready = false;
   bool _pauseOpen = false;
@@ -98,6 +99,9 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
   bool _sessionEnded = false;
   bool _missionSelected = false;
   String _difficulty = 'Intermediate';
+  bool _soundMuted = false;
+  bool _shuffleSoundtrack = true;
+  String _currentTrack = 'Harare night mix';
   final Set<int> _completedResultSequences = <int>{};
   int _launchVersion = 0;
   Completer<void>? _sessionEndAck;
@@ -150,6 +154,7 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
     _readinessPoll?.cancel();
     _resultTimer?.cancel();
     _guidance.dispose();
+    _audioRevision.dispose();
     _unity?.dispose();
     unawaited(
       SystemChrome.setPreferredOrientations(const <DeviceOrientation>[
@@ -259,18 +264,24 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
                 color: const Color(0xFF07110F),
                 child: ValueListenableBuilder<PlayerGuidance>(
                   valueListenable: _guidance,
-                  builder: (_, guide, _) => GameSessionMenu(
-                    guidance: guide,
-                    missionTitle: widget.mission.title,
-                    district: widget.mission.district,
-                    mainMenu: true,
-                    needsRestart: _gameOver,
-                    ready: _ready,
-                    characterReady:
-                        _profileRestored && widget.onCustomize != null,
-                    sponsor: const AdMobBanner(),
-                    difficulty: _difficulty,
-                    onAction: (action) => unawaited(_mainMenuAction(action)),
+                  builder: (_, guide, _) => ValueListenableBuilder<int>(
+                    valueListenable: _audioRevision,
+                    builder: (_, _, _) => GameSessionMenu(
+                      guidance: guide,
+                      missionTitle: widget.mission.title,
+                      district: widget.mission.district,
+                      mainMenu: true,
+                      needsRestart: _gameOver,
+                      ready: _ready,
+                      characterReady:
+                          _profileRestored && widget.onCustomize != null,
+                      sponsor: const AdMobBanner(),
+                      difficulty: _difficulty,
+                      soundMuted: _soundMuted,
+                      shuffleSoundtrack: _shuffleSoundtrack,
+                      currentTrack: _currentTrack,
+                      onAction: (action) => unawaited(_mainMenuAction(action)),
+                    ),
                   ),
                 ),
               ),
@@ -390,6 +401,7 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
         });
         unawaited(_syncMission());
         unawaited(_post('request_guidance'));
+        unawaited(_post('request_audio_state'));
         if (!_profileRequested) {
           _profileRequested = true;
           // Unity restores the local loadout first. Never overwrite it with
@@ -407,6 +419,15 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
         if (reportedDifficulty != null) {
           setState(() => _difficulty = reportedDifficulty);
         }
+      }
+      if (event['type'] == 'audio_state' && mounted) {
+        final payload =
+            jsonDecode(event['payload'] as String) as Map<String, dynamic>;
+        _soundMuted = payload['muted'] == true;
+        _shuffleSoundtrack = payload['shuffle'] != false;
+        final track = payload['track'] as String?;
+        if (track != null && track.trim().isNotEmpty) _currentTrack = track;
+        _audioRevision.value++;
       }
       if (event['type'] == 'weapon_changed' && mounted) {
         _profileRestored = false;
@@ -477,16 +498,28 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
           color: GameTheme.ink,
           child: ValueListenableBuilder<PlayerGuidance>(
             valueListenable: _guidance,
-            builder: (_, guide, _) => GameSessionMenu(
-              guidance: guide,
-              mainMenu: false,
-              missionTitle: widget.mission.title,
-              district: widget.mission.district,
-              ready: _ready,
-              characterReady: _profileRestored && widget.onCustomize != null,
-              sponsor: const AdMobBanner(),
-              difficulty: _difficulty,
-              onAction: (value) => Navigator.pop(menuContext, value),
+            builder: (_, guide, _) => ValueListenableBuilder<int>(
+              valueListenable: _audioRevision,
+              builder: (_, _, _) => GameSessionMenu(
+                guidance: guide,
+                mainMenu: false,
+                missionTitle: widget.mission.title,
+                district: widget.mission.district,
+                ready: _ready,
+                characterReady: _profileRestored && widget.onCustomize != null,
+                sponsor: const AdMobBanner(),
+                difficulty: _difficulty,
+                soundMuted: _soundMuted,
+                shuffleSoundtrack: _shuffleSoundtrack,
+                currentTrack: _currentTrack,
+                onAction: (value) {
+                  if (_isAudioAction(value)) {
+                    unawaited(_handleAudioAction(value));
+                  } else {
+                    Navigator.pop(menuContext, value);
+                  }
+                },
+              ),
             ),
           ),
         ),
@@ -577,6 +610,8 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
         await _showControls();
       } else if (action == 'privacy') {
         await AdMobService.instance.showPrivacyOptions();
+      } else if (_isAudioAction(action)) {
+        await _handleAudioAction(action);
       } else if (action.startsWith('difficulty_')) {
         await _setDifficulty(action.substring('difficulty_'.length));
       } else if (action == 'quit') {
@@ -592,6 +627,23 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
       }
     } finally {
       _pauseOpen = false;
+    }
+  }
+
+  bool _isAudioAction(String action) =>
+      action == 'audio_toggle' ||
+      action == 'audio_shuffle_toggle' ||
+      action == 'audio_randomize';
+
+  Future<void> _handleAudioAction(String action) async {
+    if (!_ready) return;
+    switch (action) {
+      case 'audio_toggle':
+        return _post('set_audio_muted', (!_soundMuted).toString());
+      case 'audio_shuffle_toggle':
+        return _post('set_audio_shuffle', (!_shuffleSoundtrack).toString());
+      case 'audio_randomize':
+        return _post('randomize_soundtrack');
     }
   }
 

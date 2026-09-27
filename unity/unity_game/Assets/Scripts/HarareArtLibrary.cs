@@ -13,21 +13,44 @@ namespace HarareAfterHours
     /// </summary>
     public sealed class HarareArtLibrary : MonoBehaviour
     {
+        [Serializable]
+        private sealed class AudioState
+        {
+            public bool muted;
+            public bool shuffle;
+            public string track;
+            public int trackCount;
+        }
+
         private const string EnvironmentPath = "HarareArt/Environment";
         private const string VehiclePath = "HarareArt/Vehicles";
         private const string ReferencePath = "HarareArt/References";
         private const string MusicPath = "HarareArt/Music";
+        public const string SoundMutedSaveKey = "harare.audio.muted";
+        public const string ShuffleSaveKey = "harare.audio.shuffle";
 
         private readonly List<Material> _materials = new();
         private AudioSource _musicSource;
         private AudioClip[] _musicTracks = Array.Empty<AudioClip>();
         private int _trackIndex = -1;
+        private bool _soundMuted;
+        private bool _shuffleEnabled;
         private bool _built;
 
         public int RenderedImageCount { get; private set; }
+        public int TrackCount => _musicTracks.Length;
+        public bool SoundMuted => _soundMuted;
+        public bool ShuffleEnabled => _shuffleEnabled;
         public string CurrentTrackName => _trackIndex >= 0 && _trackIndex < _musicTracks.Length
             ? _musicTracks[_trackIndex].name
             : string.Empty;
+        public string AudioStateJson => JsonUtility.ToJson(new AudioState
+        {
+            muted = _soundMuted,
+            shuffle = _shuffleEnabled,
+            track = CurrentTrackName,
+            trackCount = _musicTracks.Length
+        });
 
         public void Build(bool showReferencePanels = false)
         {
@@ -179,6 +202,9 @@ namespace HarareAfterHours
 
         private void ConfigureMusic()
         {
+            _soundMuted = PlayerPrefs.GetInt(SoundMutedSaveKey, 0) == 1;
+            _shuffleEnabled = PlayerPrefs.GetInt(ShuffleSaveKey, 1) == 1;
+            ApplyMasterVolume();
             _musicTracks = Resources.LoadAll<AudioClip>(MusicPath)
                 .Where(track => track != null)
                 .OrderBy(track => track.name, StringComparer.Ordinal)
@@ -197,9 +223,47 @@ namespace HarareAfterHours
         private void PlayNextTrack()
         {
             if (_musicSource == null || _musicTracks.Length == 0) return;
-            _trackIndex = (_trackIndex + 1) % _musicTracks.Length;
+            _trackIndex = _shuffleEnabled
+                ? DifferentRandomIndex()
+                : (_trackIndex + 1) % _musicTracks.Length;
             _musicSource.clip = _musicTracks[_trackIndex];
             _musicSource.Play();
+        }
+
+        public void SetSoundMuted(bool muted)
+        {
+            _soundMuted = muted;
+            PlayerPrefs.SetInt(SoundMutedSaveKey, muted ? 1 : 0);
+            PlayerPrefs.Save();
+            ApplyMasterVolume();
+        }
+
+        public void SetShuffleEnabled(bool enabled)
+        {
+            _shuffleEnabled = enabled;
+            PlayerPrefs.SetInt(ShuffleSaveKey, enabled ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+
+        public void RandomizeTrack()
+        {
+            if (_musicSource == null || _musicTracks.Length == 0) return;
+            _trackIndex = DifferentRandomIndex();
+            _musicSource.clip = _musicTracks[_trackIndex];
+            _musicSource.Play();
+        }
+
+        private int DifferentRandomIndex()
+        {
+            if (_musicTracks.Length < 2) return 0;
+            if (_trackIndex < 0) return UnityEngine.Random.Range(0, _musicTracks.Length);
+            int next = UnityEngine.Random.Range(0, _musicTracks.Length - 1);
+            return next >= _trackIndex ? next + 1 : next;
+        }
+
+        private void ApplyMasterVolume()
+        {
+            AudioListener.volume = _soundMuted ? 0f : 1f;
         }
 
         private Material CreateImageMaterial(Texture2D image)

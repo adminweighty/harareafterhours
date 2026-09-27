@@ -136,12 +136,16 @@ class GameSessionMenu extends StatelessWidget {
     this.district = 'Harare CBD',
     this.needsRestart = false,
     this.difficulty = 'Intermediate',
+    this.soundMuted = false,
+    this.shuffleSoundtrack = true,
+    this.currentTrack = 'Harare night mix',
     this.guidance = const PlayerGuidance(),
     this.sponsor,
   });
   final bool mainMenu, ready, characterReady, needsRestart;
+  final bool soundMuted, shuffleSoundtrack;
   final ValueChanged<String> onAction;
-  final String missionTitle, district, difficulty;
+  final String missionTitle, district, difficulty, currentTrack;
   final PlayerGuidance guidance;
   final Widget? sponsor;
 
@@ -555,10 +559,24 @@ class GameSessionMenu extends StatelessWidget {
                   onAction('difficulty_${level.toLowerCase()}'),
             ),
           ),
+          SizedBox(height: compact ? 8 : 10),
+          MenuReveal(
+            order: 4,
+            child: _AudioConsole(
+              compact: compact,
+              enabled: ready,
+              muted: soundMuted,
+              shuffle: shuffleSoundtrack,
+              currentTrack: currentTrack,
+              onMute: () => onAction('audio_toggle'),
+              onShuffle: () => onAction('audio_shuffle_toggle'),
+              onRandomize: () => onAction('audio_randomize'),
+            ),
+          ),
           if (!mainMenu) ...[
             SizedBox(height: compact ? 8 : 10),
             MenuReveal(
-              order: 4,
+              order: 5,
               child: MenuActionCard(
                 compact: compact,
                 icon: Icons.tune_rounded,
@@ -683,6 +701,302 @@ class _ControlHint extends StatelessWidget {
           style: const TextStyle(color: Color(0xFFC1D2CF), fontSize: 11),
         ),
       ],
+    ),
+  );
+}
+
+class _AudioConsole extends StatelessWidget {
+  const _AudioConsole({
+    required this.compact,
+    required this.enabled,
+    required this.muted,
+    required this.shuffle,
+    required this.currentTrack,
+    required this.onMute,
+    required this.onShuffle,
+    required this.onRandomize,
+  });
+
+  final bool compact, enabled, muted, shuffle;
+  final String currentTrack;
+  final VoidCallback onMute, onShuffle, onRandomize;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: EdgeInsets.all(compact ? 11 : 14),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xF0231735), Color(0xF0103335), Color(0xF00E2025)],
+        stops: [0, .58, 1],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: const Color(0xFF6D5E91)),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x332AEBCA),
+          blurRadius: 22,
+          offset: Offset(0, 8),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: compact ? 34 : 40,
+              height: compact ? 34 : 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF9F75FF), Color(0xFF31D8BF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                muted ? Icons.volume_off_rounded : Icons.graphic_eq_rounded,
+                color: const Color(0xFF071310),
+                size: compact ? 20 : 23,
+              ),
+            ),
+            const SizedBox(width: 11),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MenuEyebrow('NIGHTWAVE AUDIO', color: Color(0xFFB99CFF)),
+                  SizedBox(height: 2),
+                  Text(
+                    'Sound deck',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(
+                color:
+                    (muted ? const Color(0xFFE06666) : const Color(0xFF57E2C2))
+                        .withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color:
+                      (muted
+                              ? const Color(0xFFE06666)
+                              : const Color(0xFF57E2C2))
+                          .withValues(alpha: .45),
+                ),
+              ),
+              child: Text(
+                muted ? 'MUTED' : 'LIVE MIX',
+                style: TextStyle(
+                  color: muted
+                      ? const Color(0xFFFFA0A0)
+                      : const Color(0xFF73EACD),
+                  fontSize: 8,
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: compact ? 9 : 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+          decoration: BoxDecoration(
+            color: const Color(0x99101B25),
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(color: const Color(0xFF354956)),
+          ),
+          child: Row(
+            children: [
+              _Equalizer(muted: muted),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'NOW PLAYING',
+                      style: TextStyle(
+                        color: Color(0xFF78918F),
+                        fontSize: 8,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      currentTrack.isEmpty ? 'Harare night mix' : currentTrack,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFFE7F7F3),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (shuffle)
+                const Padding(
+                  padding: EdgeInsets.only(left: 8),
+                  child: Icon(
+                    Icons.shuffle_rounded,
+                    color: Color(0xFFB99CFF),
+                    size: 18,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(height: compact ? 8 : 10),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final twoColumns = constraints.maxWidth < 360;
+            final width = twoColumns
+                ? (constraints.maxWidth - 8) / 2
+                : (constraints.maxWidth - 16) / 3;
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                SizedBox(
+                  width: width,
+                  child: _AudioDeckButton(
+                    icon: muted
+                        ? Icons.volume_off_rounded
+                        : Icons.volume_up_rounded,
+                    label: muted ? 'Sound off' : 'Sound on',
+                    active: !muted,
+                    enabled: enabled,
+                    onTap: onMute,
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: _AudioDeckButton(
+                    icon: Icons.shuffle_rounded,
+                    label: shuffle ? 'Shuffle on' : 'Shuffle off',
+                    active: shuffle,
+                    enabled: enabled,
+                    onTap: onShuffle,
+                  ),
+                ),
+                SizedBox(
+                  width: width,
+                  child: _AudioDeckButton(
+                    icon: Icons.skip_next_rounded,
+                    label: 'New mix',
+                    active: false,
+                    enabled: enabled,
+                    onTap: onRandomize,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    ),
+  );
+}
+
+class _Equalizer extends StatelessWidget {
+  const _Equalizer({required this.muted});
+  final bool muted;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 30,
+    height: 22,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        for (final height in <double>[8, 17, 12, 21, 14])
+          AnimatedContainer(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 220),
+            width: 3,
+            height: muted ? 3 : height,
+            decoration: BoxDecoration(
+              color: muted ? const Color(0xFF735F70) : const Color(0xFF46DFC3),
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+class _AudioDeckButton extends StatelessWidget {
+  const _AudioDeckButton({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool active, enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: active ? const Color(0xFF243F3C) : const Color(0xCC17242E),
+    borderRadius: BorderRadius.circular(10),
+    child: InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 48),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: active ? const Color(0xFF52DCC1) : const Color(0xFF3D4A57),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 17,
+              color: enabled
+                  ? (active ? const Color(0xFF69E5CB) : const Color(0xFFB99CFF))
+                  : const Color(0xFF687371),
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: enabled
+                      ? const Color(0xFFE7F4F1)
+                      : const Color(0xFF687371),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     ),
   );
 }

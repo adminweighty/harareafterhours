@@ -148,4 +148,40 @@ void main() {
     await tester.tap(find.text('Expert'));
     expect(actions, ['difficulty_expert']);
   });
+
+  testWidgets('sound deck exposes mute, shuffle and a different mix', (
+    tester,
+  ) async {
+    final actions = <String>[];
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: GameSessionMenu(
+            mainMenu: true,
+            ready: true,
+            characterReady: true,
+            soundMuted: true,
+            shuffleSoundtrack: false,
+            currentTrack: 'Still dreaming',
+            onAction: actions.add,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('NIGHTWAVE AUDIO'), findsOneWidget);
+    expect(find.text('Still dreaming'), findsOneWidget);
+    for (final label in ['Sound off', 'Shuffle off', 'New mix']) {
+      await tester.ensureVisible(find.text(label));
+      await tester.tap(find.text(label));
+    }
+    expect(actions, [
+      'audio_toggle',
+      'audio_shuffle_toggle',
+      'audio_randomize',
+    ]);
+    expect(tester.takeException(), isNull);
+  });
 }
