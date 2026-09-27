@@ -1,0 +1,1 @@
+PASS: Joina spawn, first objective, contact distance gate, supported materials, no added real-time lights, LOD groups, persisted welcome, existing completed mission preserved, +25 once, original race retained. Renders captured. Device frame-time profiling still required.

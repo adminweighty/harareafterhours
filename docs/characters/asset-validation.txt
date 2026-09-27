@@ -1,0 +1,103 @@
+PASS: Exactly one Animator per character
+PASS: Three shared-rig LOD meshes
+PASS: Valid calibrated Humanoid avatar
+PASS: Controller owns world movement; animation has no root-motion drift
+PASS: All LOD bones belong to shared skeleton
+PASS: All character materials use mobile URP shader
+PASS: Skin, eyes and hair have diffuse textures
+PASS: All LOD bones belong to shared skeleton
+PASS: All character materials use mobile URP shader
+PASS: Skin, eyes and hair have diffuse textures
+PASS: All LOD bones belong to shared skeleton
+PASS: All character materials use mobile URP shader
+PASS: Skin, eyes and hair have diffuse textures
+PASS: Finger rig mapped on both hands
+PASS: idle retains controller-owned origin
+POSE: idle; left-foot stride range 0.001m.
+PASS: Idle arms relaxed below shoulders
+PASS: Face points in controller's +Z direction
+PASS: walk has authored forward/back foot motion
+PASS: walk retains controller-owned origin
+POSE: walk; left-foot stride range 0.680m.
+PASS: run has authored forward/back foot motion
+PASS: run retains controller-owned origin
+POSE: run; left-foot stride range 1.141m.
+PASS: jump-rise retains controller-owned origin
+POSE: jump-rise; left-foot stride range 0.328m.
+PASS: jump-fall retains controller-owned origin
+POSE: jump-fall; left-foot stride range 0.019m.
+PASS: land retains controller-owned origin
+POSE: land; left-foot stride range 0.183m.
+PASS: All 24 cast roles use the repaired base
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance
+PASS: Cast has no distorted non-uniform body scaling
+PASS: Cast shares the exact same base mesh asset
+PASS: Cast shares one Animator per instance

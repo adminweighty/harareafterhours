@@ -1,0 +1,5 @@
+PASS: spawn counts, protected police seats, robber defeat/reward-once, self-defence, blocked sight
+PASS: assault triggers wanted, patrol moves, officer captures, handcuffs lock movement/boarding
+PASS: release, capped fine, mission retained, wanted escalation
+PASS: break sight/range for 12 seconds clears pursuit
+PASS: live robbery damages player, steals points, defeat recovers stolen points plus reward

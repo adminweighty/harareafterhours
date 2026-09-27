@@ -1,0 +1,1 @@
+PASS: telegraphed attack; dodge by movement; wall obstruction; one-hit Game Over; resume blocked; explicit restart; restart grace; +50 hostile-only reward; no repeat farming; mission and points retained. Deterministic combat fixtures.

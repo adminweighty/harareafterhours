@@ -1,0 +1,1 @@
+PASS: punch contact delay, flinch, wall occlusion, three-punch fall, ground pose, +50 once, reset, officer recovery; kick animation/contact delay, wall occlusion, longer reach, two damage, shared cooldown, kick+punch defeat, kick buffer reset, separate touch hit target and pending-attack cancellation.

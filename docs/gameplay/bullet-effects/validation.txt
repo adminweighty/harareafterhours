@@ -1,0 +1,1 @@
+PASS: actual ranged character hit; wall obstruction; blood burst and pool cap 72; blood toggle clears effects; reduced blood; downed guard; wanted consequence; warm short tracer <=0.65m; muzzle origin; reduced-effects flash/tracer suppression; mute.

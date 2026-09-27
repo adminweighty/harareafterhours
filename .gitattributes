@@ -1,0 +1,38 @@
+# Keep Unity's YAML assets mergeable and stable across platforms.
+*.cs text eol=lf
+*.cginc text eol=lf
+*.compute text eol=lf
+*.hlsl text eol=lf
+*.shader text eol=lf
+*.asmdef text eol=lf
+*.asmref text eol=lf
+*.inputactions text eol=lf
+*.unity text eol=lf
+*.prefab text eol=lf
+*.asset text eol=lf
+*.mat text eol=lf
+*.anim text eol=lf
+*.controller text eol=lf
+*.meta text eol=lf
+
+# Unity writes meaningful empty YAML values with a trailing space.
+*.unity whitespace=-blank-at-eol,-blank-at-eof
+*.prefab whitespace=-blank-at-eol,-blank-at-eof
+*.asset whitespace=-blank-at-eol,-blank-at-eof
+*.mat whitespace=-blank-at-eol,-blank-at-eof
+*.anim whitespace=-blank-at-eol,-blank-at-eof
+*.controller whitespace=-blank-at-eol,-blank-at-eof
+*.meta whitespace=-blank-at-eol,-blank-at-eof
+
+# Do not attempt text conversion or line-based diffs for binary game assets.
+*.fbx binary
+*.blend binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.tga binary
+*.psd binary
+*.wav binary
+*.mp3 binary
+*.mp4 binary
+*.dll binary

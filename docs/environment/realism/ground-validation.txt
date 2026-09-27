@@ -1,0 +1,8 @@
+PASS: 400m collision ground, 16 outer support samples, clear intersections and far boundary
+PASS: photographic asphalt colour/normal/roughness, 1K mipmaps, repeat, 2.05m scale
+PASS: shared textured materials, mipmaps, supported shader, four cars and 23 pedestrians
+PASS: daylight sky, single 128px street probe, detail prefab and clear walking lane
+PASS: normal walking on extended ground beyond original 75m edge
+PASS: jump and landing on new ground
+Editor frame sample median 16.69ms; p95 17.20ms (not a physical-device GPU benchmark)
+PASS: no runtime errors; three review views captured

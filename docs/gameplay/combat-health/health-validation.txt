@@ -1,0 +1,1 @@
+PASS: telegraphed attack; movement evasion; wall obstruction; first hit leaves 80 life and controls active; duplicate hit protection; five separated hits cause Game Over; resume blocked; explicit restart restores 100 life; restart grace; +50 hostile-only reward; no repeat farming; mission and points retained.

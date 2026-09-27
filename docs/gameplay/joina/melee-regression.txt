@@ -1,0 +1,1 @@
+PASS: delayed melee contact; enemy flinch; wall blocks melee; three punches trigger gradual fall; ground pose persists; standing collider disabled; +50 once; reset restores animator/controller; officer fall and recovery.

@@ -1,0 +1,36 @@
+{
+  "rig": "FoundationRig",
+  "bones": 53,
+  "lods": {
+    "LOD0": {
+      "file": "Character01_LOD0.fbx",
+      "triangles": 18725,
+      "meshes": {
+        "Character01_LOD0_Mesh": 18725
+      }
+    },
+    "LOD1": {
+      "file": "Character01_LOD1.fbx",
+      "triangles": 10631,
+      "meshes": {
+        "Character01_LOD1_Mesh": 10631
+      }
+    },
+    "LOD2": {
+      "file": "Character01_LOD2.fbx",
+      "triangles": 5137,
+      "meshes": {
+        "Character01_LOD2_Mesh": 5137
+      }
+    }
+  },
+  "textures": [
+    "brown_eye.png",
+    "cropped_coils.png",
+    "eyebrow001.png",
+    "male_casualsuit05_normal.png",
+    "outfit_generated.png",
+    "shoes05_diffuse.png",
+    "young_darkskinned_male_diffuse.png"
+  ]
+}

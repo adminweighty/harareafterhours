@@ -1,0 +1,4 @@
+PASS: four reachable storefronts, clear approaches, persistent one-time discovery rewards, main mission unchanged.
+PASS: automatic left/right/back/forward camera alignment, held movement stays straight, manual-look grace period.
+PASS: walking framing, obstacle collision, vehicle-heading entry and own-car exclusion.
+Captured four storefronts and walking camera. Deterministic Update/LateUpdate fixtures; device performance and sustained driving require separate validation.

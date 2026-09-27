@@ -1,0 +1,2 @@
+PASS: analog dead zone and diagonal clamp; safe non-overlapping button hit regions; live walking with camera finger; three-finger move/look/jump; outer-ring sprint; no slide-to-fire; release, pause, focus and input-lock cancellation.
+Physical-device comfort and driving gestures require live device testing.

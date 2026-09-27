@@ -1,0 +1,1 @@
+PASS: all four venues enter/exit; rescue combat, escort, reward and cleanup regressions passed; all M01 stages and completed-state next steps; four rendered lounge NPCs; canonical public name with legacy ID; TALK opens guidance; EXIT refreshes street objective; no invented story progress or duplicate rewards. Real preferences restored.

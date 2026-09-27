@@ -1,0 +1,1 @@
+PASS: 49 characters / 147 skinned meshes; supported materials; no forcibly hidden bodies; distant LOD retained; six-direction ambient minimum 0.401. Armed cardinal movement/camera, walking speed, held sprint, release-to-walk, stop distance, actual hostile hits at 2/5/50m and weapon limits, wall blocking and 50m hip-fire assistance passed.

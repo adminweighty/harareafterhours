@@ -1,0 +1,8 @@
+{
+    "castCount": 24,
+    "npcCount": 23,
+    "lodCount": 3,
+    "totalTriangleBudget": 34397,
+    "avatar": "Humanoid",
+    "prefab": "Assets/Resources/HarareCharacters/Character01.prefab"
+}

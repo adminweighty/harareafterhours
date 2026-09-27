@@ -1,0 +1,3 @@
+PASS: four reachable storefronts, clear approaches, persistent one-time discovery rewards, main mission unchanged.
+PASS: walking framing, obstacle collision, vehicle-heading entry and own-car exclusion.
+Captured four storefronts and walking camera. Device performance and sustained driving require separate validation.

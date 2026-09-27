@@ -1,0 +1,10 @@
+PASS: four shared cars, material-separated mesh, LODs and grounded suspension
+PASS: visible forward-facing seated driver with roof clearance
+PASS: acceleration and physical wheel rotation, 13.1km/h
+PASS: speed-sensitive front steering, stability and moving-exit rejection
+PASS: reverse input brakes before reversing
+PASS: stopped safe exit, obstruction checks and walking restoration
+PASS: visible passenger and AI driver ride together
+PASS: passenger requests stop and exits safely
+PASS: ambient car drive takeover
+PASS: delivery mission, 23 pedestrians, and no runtime errors

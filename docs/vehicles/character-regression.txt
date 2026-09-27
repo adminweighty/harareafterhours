@@ -1,0 +1,6 @@
+PASS walking: 1.80m/s
+PASS sprint: 5.50m/s
+PASS touch jump / airborne animation
+PASS landing; apex 1.44m
+PASS direction change and face alignment
+PASS 24 shared characters and no runtime errors

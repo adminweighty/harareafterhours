@@ -1,0 +1,1 @@
+PASS: four enterable venues; actual exterior entrance; two robbers; rescue gated by defeat; escort movement and pause; escort proximity required; safe exterior exit; one-time saved reward; mission retained; cleanup; completed rescue not respawned; all rooms exit safely; external relocation cleanup.

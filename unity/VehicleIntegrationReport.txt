@@ -1,0 +1,5 @@
+Unity 6000.3.24f1
+Vehicle prefabs: 2
+LOD variants per vehicle: 3
+McLaren wheel pivots: preserved
+Status: passed

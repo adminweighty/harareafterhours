@@ -1,0 +1,1 @@
+PASS: movement never shoots from mouse fallback; FIRE works alongside movement; AIM toggle does not fire; pointer ownership survives dragging across buttons; quit clears input and aim, stops time/audio and acknowledges save; late resume blocked; start reloads a fresh scene.

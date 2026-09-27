@@ -1,0 +1,1 @@
+PASS: Joina spawn, first objective, contact distance gate, unobstructed walking route, campaign vehicle gate, supported materials, no added real-time lights, LOD groups, persisted welcome, legacy stage MeetTino preserved, +25 once, original race retained. Fresh-start mode also verifies Tino keys hand-off. Renders captured. Device frame-time profiling still required.

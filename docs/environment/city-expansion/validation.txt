@@ -1,0 +1,4 @@
+PASS: 1200m ground, 197 reference-derived modular buildings, 3980m circuit; 803 asphalt and clearance samples
+PASS: ordered checkpoint completion, best-time persistence, first-finish reward, retry/cancel, campaign state preserved (synthetic route fixture)
+Editor frame sample median 16.69 ms; p95 16.72 ms. Not a physical-phone performance guarantee.
+PASS: Balanced/High presets, Avondale landmark, no runtime errors. Three review views captured.

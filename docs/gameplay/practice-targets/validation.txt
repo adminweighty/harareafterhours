@@ -1,0 +1,1 @@
+PASS: six non-emissive practice targets, supported materials, grounded meshes, hit flash restores original materials, damage, scoring, duplicate-hit protection and respawn.

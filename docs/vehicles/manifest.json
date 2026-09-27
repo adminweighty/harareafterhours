@@ -1,0 +1,53 @@
+{
+  "base": "SharedSUV",
+  "source": "/Users/udeanmbano/StudioProjects/car-prototype/source/mercedes_gls/uploads_files_2787791_Mercedes+Benz+GLS+580.blend",
+  "length_m": 5.207,
+  "wheels": {
+    "Wheel_FR": {
+      "centre_blender": [
+        -0.8347569704055786,
+        -1.6797783374786377,
+        0.38673269748687744
+      ],
+      "radius": 0.38673253128283136
+    },
+    "Wheel_RR": {
+      "centre_blender": [
+        -0.8598027229309082,
+        1.4453678131103516,
+        0.38673269748687744
+      ],
+      "radius": 0.38673253128283136
+    },
+    "Wheel_FL": {
+      "centre_blender": [
+        0.8347569704055786,
+        -1.6797783374786377,
+        0.3867325186729431
+      ],
+      "radius": 0.3867325186729431
+    },
+    "Wheel_RL": {
+      "centre_blender": [
+        0.8611940741539001,
+        1.4453678131103516,
+        0.3867325186729431
+      ],
+      "radius": 0.3867325186729431
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "triangles": 25280
+    },
+    {
+      "lod": 1,
+      "triangles": 23222
+    },
+    {
+      "lod": 2,
+      "triangles": 18683
+    }
+  ]
+}

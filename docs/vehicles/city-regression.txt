@@ -1,0 +1,12 @@
+PASS: single reference block at original plot centre; all LOD/material/collision checks pass; carriageways clear.
+PASS: 24 cast roles, 23 NPCs, three traffic vehicles, combat, progression, mission, HUD, audio and bridge present.
+PASS: 21 existing streetlights retain their intended distinct street positions.
+PASS: player walks >1.8m on the new pavement with normal movement input (1.8m/s walking speed).
+PASS: all 23 NPCs retained; at least 20 moved during sample. All three traffic vehicles moved.
+PASS: normal USE input enters the existing vehicle and advances the mission.
+PASS: throttle input moves the existing vehicle.
+PASS: normal USE input exits the vehicle and restores the character controller.
+PASS: vehicle overlapping the unchanged market trigger completes the mission (checkpoint teleported for this regression check).
+Editor CPU/wall-frame sample, 180 frames: median 16.69ms; p95 16.71ms. Not a physical mobile GPU benchmark.
+Unity total allocated memory: 273 MiB (whole editor scene, not incremental block cost).
+PASS: no runtime errors or exceptions during validation.

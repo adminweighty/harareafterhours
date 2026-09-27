@@ -1,0 +1,14 @@
+First Street asset budget (not a device frame-time benchmark)
+Bata frontage - reference 10 LOD0: 4836 triangles, 8 renderers, threshold 0.24
+Bata frontage - reference 10 LOD1: 1908 triangles, 7 renderers, threshold 0.09
+Bata frontage - reference 10 LOD2: 492 triangles, 5 renderers, threshold 0.008
+Bata lettering LOD0: 0 triangles, 1 renderers, threshold 0.025
+First Street lettering LOD0: 0 triangles, 1 renderers, threshold 0.025
+FirstStreet_PavingJoints LOD0: 996 triangles, 1 renderers, threshold 0.065
+FirstStreet_VendorTable LOD0: 132 triangles, 3 renderers, threshold 0.035
+FirstStreet_ShadeTree LOD0: 512 triangles, 3 renderers, threshold 0.16
+FirstStreet_ShadeTree LOD1: 192 triangles, 3 renderers, threshold 0.065
+FirstStreet_ShadeTree LOD2: 72 triangles, 2 renderers, threshold 0.015
+Colliders: 12 (boxes only)
+Added real-time lights: 0
+Shared surface materials: 14; text uses one shared font atlas
