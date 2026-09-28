@@ -6,26 +6,34 @@ import '../data/campaign_data.dart';
 import '../models/character_profile.dart';
 import '../models/campaign_models.dart';
 import '../models/campaign_snapshot.dart';
+import '../models/leaderboard.dart';
+import '../models/player_identity.dart';
 import '../services/character_photo_service.dart';
 import '../services/campaign_sync_service.dart';
+import '../services/player_identity_service.dart';
 
 enum SyncState { local, syncing, synced, unavailable }
+
+enum LeaderboardState { idle, loading, ready, unavailable }
 
 class CampaignViewModel extends BaseViewModel {
   CampaignViewModel({
     CampaignSyncService? syncService,
     CharacterPhotoService? characterPhotoService,
+    PlayerIdentityService? identityService,
   }) : _syncService = syncService ?? CampaignSyncService(),
        _characterPhotoService =
-           characterPhotoService ?? CharacterPhotoService();
+           characterPhotoService ?? CharacterPhotoService(),
+       _identityService = identityService ?? PlayerIdentityService();
 
-  static const String _profileId = String.fromEnvironment(
+  static const String _fallbackProfileId = String.fromEnvironment(
     'CAMPAIGN_PROFILE_ID',
     defaultValue: 'tari-demo',
   );
 
   final CampaignSyncService _syncService;
   final CharacterPhotoService _characterPhotoService;
+  final PlayerIdentityService _identityService;
   final Set<int> _completedLevels = <int>{};
   final Map<int, int> _bestScores = <int, int>{};
 
@@ -36,6 +44,14 @@ class CampaignViewModel extends BaseViewModel {
   int _selectedTab = 0;
   int _selectedDistrict = 0;
   CharacterProfile _character = CharacterProfile.initial;
+  PlayerIdentity _identity = const PlayerIdentity(
+    profileId: _fallbackProfileId,
+    displayName: 'Tari',
+  );
+  List<LeaderboardEntry> _leaderboard = const <LeaderboardEntry>[];
+  LeaderboardState _leaderboardState = LeaderboardState.idle;
+  String _leaderboardMessage = 'Open top scores to compare your best runs.';
+  bool _identityReady = false;
   bool _isPickingCharacterPhoto = false;
   String _characterPhotoMessage =
       'Your portrait stays on this device for this session and is not sent to the campaign save.';
@@ -55,14 +71,92 @@ class CampaignViewModel extends BaseViewModel {
   bool get isPickingCharacterPhoto => _isPickingCharacterPhoto;
   String get characterPhotoMessage => _characterPhotoMessage;
   String get lastChoice => _lastChoice;
-  String get profileId => _profileId;
+  String get profileId => _identity.profileId;
+  String get playerName => _identity.displayName;
+  String get playerEmail => _identity.email;
+  bool get identityReady => _identityReady;
+  List<LeaderboardEntry> get leaderboard => _leaderboard;
+  LeaderboardState get leaderboardState => _leaderboardState;
+  String get leaderboardMessage => _leaderboardMessage;
+  bool get isLeaderboardLoading =>
+      _leaderboardState == LeaderboardState.loading;
   String get syncMessage => _syncMessage;
   SyncState get syncState => _syncState;
   bool get isSyncing => _syncState == SyncState.syncing;
   String get apiBaseUrl => _syncService.baseUrl;
   int get completedCount => _completedLevels.length;
+  int get totalBestScore =>
+      _bestScores.values.fold(0, (sum, score) => sum + score);
   int get campaignPercent => (completedCount / kMissions.length * 100).round();
   bool get campaignComplete => completedCount == kMissions.length;
+
+  Future<void> initialize() async {
+    if (_identityReady) return;
+    try {
+      _identity = await _identityService.load(
+        fallbackName: _character.name,
+        fallbackProfileId: _fallbackProfileId,
+      );
+    } catch (_) {
+      _leaderboardMessage =
+          'Player identity could not be loaded. You can still play offline.';
+    } finally {
+      _identityReady = true;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> updatePlayerIdentity({
+    required String name,
+    required String email,
+  }) async {
+    try {
+      _identity = await _identityService.save(
+        current: _identity,
+        displayName: name,
+        email: email,
+      );
+      _leaderboardMessage =
+          'Identity saved. Publish your score to update the rankings.';
+      notifyListeners();
+      return null;
+    } on PlayerIdentityException catch (error) {
+      return error.message;
+    } catch (_) {
+      return 'Could not save your player identity.';
+    }
+  }
+
+  Future<void> refreshLeaderboard({bool publish = false}) async {
+    if (isLeaderboardLoading) return;
+    _leaderboardState = LeaderboardState.loading;
+    _leaderboardMessage = publish
+        ? 'Publishing your best scores…'
+        : 'Loading top players…';
+    notifyListeners();
+    try {
+      if (publish) {
+        final saved = await _syncService.save(_snapshot());
+        _applySnapshot(saved);
+        _syncState = SyncState.synced;
+        _syncMessage =
+            'Cloud save updated${_timestampSuffix(saved.updatedAt)}.';
+      }
+      final result = await _syncService.loadLeaderboard(profileId: profileId);
+      _leaderboard = result.entries;
+      _leaderboardState = LeaderboardState.ready;
+      _leaderboardMessage = result.entries.isEmpty
+          ? 'No published scores yet. Be the first on the board.'
+          : result.playerRank == null
+          ? 'Showing the current top ${result.entries.length} players.'
+          : 'You are ranked #${result.playerRank}.';
+    } on CampaignSyncException catch (error) {
+      _leaderboardState = LeaderboardState.unavailable;
+      _leaderboardMessage = error.message;
+    } finally {
+      notifyListeners();
+    }
+  }
 
   Mission get nextMission {
     for (final Mission mission in kMissions) {
@@ -241,10 +335,10 @@ class CampaignViewModel extends BaseViewModel {
     notifyListeners();
 
     try {
-      final CampaignSnapshot? snapshot = await _syncService.load(_profileId);
+      final CampaignSnapshot? snapshot = await _syncService.load(profileId);
       if (snapshot == null) {
         _syncState = SyncState.local;
-        _syncMessage = 'No cloud save yet for $_profileId.';
+        _syncMessage = 'No cloud save yet for $profileId.';
       } else {
         _applySnapshot(snapshot);
         _syncState = SyncState.synced;
@@ -270,7 +364,8 @@ class CampaignViewModel extends BaseViewModel {
 
   CampaignSnapshot _snapshot() {
     return CampaignSnapshot(
-      profileId: _profileId,
+      profileId: profileId,
+      playerName: playerName,
       wallet: _wallet,
       xp: _xp,
       crewTrust: _crewTrust,

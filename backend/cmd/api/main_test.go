@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"sync"
 	"testing"
 	"time"
@@ -17,6 +18,7 @@ func TestCampaignRoundTripUsesRepository(t *testing.T) {
 
 	payload := campaignSnapshot{
 		ProfileID:        "tari-demo",
+		PlayerName:       "Tari",
 		Wallet:           1200,
 		XP:               225,
 		CrewTrust:        1,
@@ -80,6 +82,7 @@ func TestSQLiteStorePersistsCampaigns(t *testing.T) {
 
 	want := campaignSnapshot{
 		ProfileID:        "local-player",
+		PlayerName:       "Maya",
 		Wallet:           900,
 		XP:               180,
 		CrewTrust:        2,
@@ -106,6 +109,21 @@ func TestSQLiteStorePersistsCampaigns(t *testing.T) {
 	if got.Wallet != want.Wallet || got.XP != want.XP ||
 		got.CompletedLevels[1] != 2 || got.BestScores["1"] != 920 {
 		t.Fatalf("unexpected sqlite campaign: %#v", got)
+	}
+
+	challenger := campaignSnapshot{
+		ProfileID: "challenger", PlayerName: "Rudo", XP: 300,
+		CompletedLevels: []int{1}, BestScores: map[string]int{"1": 990},
+	}
+	if _, err := store.save(context.Background(), challenger); err != nil {
+		t.Fatalf("save sqlite challenger: %v", err)
+	}
+	ranking, err := store.leaderboard(context.Background(), 10)
+	if err != nil {
+		t.Fatalf("load sqlite leaderboard: %v", err)
+	}
+	if len(ranking) != 2 || ranking[0].PlayerName != "Maya" || ranking[0].Score != 1730 {
+		t.Fatalf("unexpected sqlite leaderboard: %#v", ranking)
 	}
 }
 
@@ -143,6 +161,70 @@ func (s *memoryStore) save(_ context.Context, snapshot campaignSnapshot) (campai
 	snapshot.UpdatedAt = time.Now().UTC()
 	s.snapshots[snapshot.ProfileID] = cloneSnapshot(snapshot)
 	return cloneSnapshot(snapshot), nil
+}
+
+func (s *memoryStore) leaderboard(_ context.Context, limit int) ([]leaderboardRecord, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	records := make([]leaderboardRecord, 0, len(s.snapshots))
+	for _, snapshot := range s.snapshots {
+		record := leaderboardRecord{
+			ProfileID:         snapshot.ProfileID,
+			PlayerName:        snapshot.PlayerName,
+			XP:                snapshot.XP,
+			CompletedMissions: len(snapshot.CompletedLevels),
+			UpdatedAt:         snapshot.UpdatedAt,
+		}
+		for _, score := range snapshot.BestScores {
+			record.Score += score
+		}
+		records = append(records, record)
+	}
+	sort.Slice(records, func(i, j int) bool {
+		if records[i].Score != records[j].Score {
+			return records[i].Score > records[j].Score
+		}
+		if records[i].XP != records[j].XP {
+			return records[i].XP > records[j].XP
+		}
+		return records[i].ProfileID < records[j].ProfileID
+	})
+	if len(records) > limit {
+		records = records[:limit]
+	}
+	return records, nil
+}
+
+func TestLeaderboardRanksScoresAndMarksCurrentPlayer(t *testing.T) {
+	store := newMemoryStore()
+	now := time.Now().UTC()
+	store.snapshots["maya"] = campaignSnapshot{
+		ProfileID: "maya", PlayerName: "Maya", XP: 100,
+		CompletedLevels: []int{1}, BestScores: map[string]int{"1": 930}, UpdatedAt: now,
+	}
+	store.snapshots["tari"] = campaignSnapshot{
+		ProfileID: "tari", PlayerName: "Tari", XP: 120,
+		CompletedLevels: []int{1}, BestScores: map[string]int{"1": 980}, UpdatedAt: now,
+	}
+	server := httptest.NewServer((&api{store: store, corsOrigin: "*"}).routes())
+	defer server.Close()
+
+	response, err := http.Get(server.URL + "/v1/leaderboard?limit=10&profileId=maya")
+	if err != nil {
+		t.Fatalf("get leaderboard: %v", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d", response.StatusCode)
+	}
+	var body leaderboardResponse
+	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
+		t.Fatalf("decode leaderboard: %v", err)
+	}
+	if len(body.Entries) != 2 || body.Entries[0].PlayerName != "Tari" ||
+		body.PlayerRank == nil || *body.PlayerRank != 2 || !body.Entries[1].IsCurrentPlayer {
+		t.Fatalf("unexpected leaderboard: %#v", body)
+	}
 }
 
 func newRequest(t *testing.T, method, url string, body []byte) *http.Request {

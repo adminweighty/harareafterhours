@@ -1,6 +1,7 @@
 class CampaignSnapshot {
   const CampaignSnapshot({
     required this.profileId,
+    required this.playerName,
     required this.wallet,
     required this.xp,
     required this.crewTrust,
@@ -12,6 +13,7 @@ class CampaignSnapshot {
   });
 
   final String profileId;
+  final String playerName;
   final int wallet;
   final int xp;
   final int crewTrust;
@@ -43,6 +45,7 @@ class CampaignSnapshot {
 
     return CampaignSnapshot(
       profileId: json['profileId'] as String? ?? '',
+      playerName: json['playerName'] as String? ?? 'Player',
       wallet: _intOrZero(json['wallet']),
       xp: _intOrZero(json['xp']),
       crewTrust: _intOrZero(json['crewTrust']),
@@ -57,6 +60,7 @@ class CampaignSnapshot {
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'profileId': profileId,
+      'playerName': playerName,
       'wallet': wallet,
       'xp': xp,
       'crewTrust': crewTrust,

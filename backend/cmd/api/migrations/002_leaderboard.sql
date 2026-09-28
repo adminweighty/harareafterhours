@@ -1,0 +1,2 @@
+ALTER TABLE campaign_saves
+  ADD COLUMN IF NOT EXISTS player_name VARCHAR(32) NOT NULL DEFAULT 'Player';

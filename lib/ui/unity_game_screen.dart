@@ -59,6 +59,7 @@ class UnityGameplayScreen extends StatefulWidget {
     required this.character,
     this.stayInCity = false,
     this.onCustomize,
+    this.onLeaderboard,
     this.onCharacterRestored,
     this.onMissionCompleted,
   });
@@ -68,6 +69,7 @@ class UnityGameplayScreen extends StatefulWidget {
   final CharacterProfile character;
   final bool stayInCity;
   final Future<void> Function()? onCustomize;
+  final Future<void> Function()? onLeaderboard;
   final ValueChanged<CharacterProfile>? onCharacterRestored;
   final void Function(Mission mission, MissionResult result)?
   onMissionCompleted;
@@ -555,6 +557,9 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
         await _setDifficulty(action!.substring('difficulty_'.length));
       }
       if (action == 'character' && mounted) await _customize();
+      if (action == 'leaderboard' && mounted) {
+        await widget.onLeaderboard?.call();
+      }
       if (action == 'privacy') {
         await AdMobService.instance.showPrivacyOptions();
       }
@@ -608,6 +613,8 @@ class _UnityGameplayScreenState extends State<UnityGameplayScreen>
         await _customize();
       } else if (action == 'help') {
         await _showControls();
+      } else if (action == 'leaderboard') {
+        await widget.onLeaderboard?.call();
       } else if (action == 'privacy') {
         await AdMobService.instance.showPrivacyOptions();
       } else if (_isAudioAction(action)) {

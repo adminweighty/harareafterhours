@@ -474,6 +474,13 @@ class GameSessionMenu extends StatelessWidget {
       subtitle: 'Movement, driving and combat guide',
       onTap: () => onAction('help'),
     );
+    final leaderboardCard = MenuActionCard(
+      compact: compact,
+      icon: Icons.emoji_events_outlined,
+      title: 'Top scores',
+      subtitle: 'Set your identity · compare players',
+      onTap: () => onAction('leaderboard'),
+    );
 
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 16),
@@ -549,8 +556,10 @@ class GameSessionMenu extends StatelessWidget {
                   ),
           ),
           SizedBox(height: compact ? 8 : 10),
+          MenuReveal(order: 3, child: leaderboardCard),
+          SizedBox(height: compact ? 8 : 10),
           MenuReveal(
-            order: 3,
+            order: 4,
             child: _DifficultySelector(
               compact: compact,
               selected: difficulty,
@@ -561,7 +570,7 @@ class GameSessionMenu extends StatelessWidget {
           ),
           SizedBox(height: compact ? 8 : 10),
           MenuReveal(
-            order: 4,
+            order: 5,
             child: _AudioConsole(
               compact: compact,
               enabled: ready,
@@ -576,7 +585,7 @@ class GameSessionMenu extends StatelessWidget {
           if (!mainMenu) ...[
             SizedBox(height: compact ? 8 : 10),
             MenuReveal(
-              order: 5,
+              order: 6,
               child: MenuActionCard(
                 compact: compact,
                 icon: Icons.tune_rounded,

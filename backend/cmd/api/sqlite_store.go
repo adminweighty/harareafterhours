@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -48,6 +49,10 @@ func newSQLiteStore(ctx context.Context, databaseURL string) (*sqliteStore, erro
 		db.Close()
 		return nil, fmt.Errorf("apply sqlite campaign schema: %w", err)
 	}
+	if err := ensureSQLitePlayerNameColumn(ctx, db); err != nil {
+		db.Close()
+		return nil, err
+	}
 	return store, nil
 }
 
@@ -66,12 +71,13 @@ func (s *sqliteStore) get(ctx context.Context, profileID string) (campaignSnapsh
 func (s *sqliteStore) save(ctx context.Context, snapshot campaignSnapshot) (campaignSnapshot, error) {
 	const upsert = `
 		INSERT INTO campaign_saves (
-			profile_id, wallet, xp, crew_trust, community_support,
+				profile_id, player_name, wallet, xp, crew_trust, community_support,
 			completed_levels, best_scores, last_choice, updated_at
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, STRFTIME('%Y-%m-%dT%H:%M:%fZ', 'now'))
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, STRFTIME('%Y-%m-%dT%H:%M:%fZ', 'now'))
 		ON CONFLICT(profile_id) DO UPDATE SET
-			wallet = excluded.wallet,
+				player_name = excluded.player_name,
+				wallet = excluded.wallet,
 			xp = excluded.xp,
 			crew_trust = excluded.crew_trust,
 			community_support = excluded.community_support,
@@ -99,6 +105,7 @@ func (s *sqliteStore) save(ctx context.Context, snapshot campaignSnapshot) (camp
 		ctx,
 		upsert,
 		snapshot.ProfileID,
+		snapshot.PlayerName,
 		snapshot.Wallet,
 		snapshot.XP,
 		snapshot.CrewTrust,
@@ -123,6 +130,68 @@ func (s *sqliteStore) save(ctx context.Context, snapshot campaignSnapshot) (camp
 	return saved, nil
 }
 
+func (s *sqliteStore) leaderboard(ctx context.Context, limit int) ([]leaderboardRecord, error) {
+	const query = `
+		SELECT profile_id, player_name, xp, completed_levels, best_scores, updated_at
+		FROM campaign_saves`
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("load sqlite leaderboard: %w", err)
+	}
+	defer rows.Close()
+	records := make([]leaderboardRecord, 0)
+	for rows.Next() {
+		var record leaderboardRecord
+		var completedJSON, scoresJSON, updatedAt string
+		if err := rows.Scan(
+			&record.ProfileID,
+			&record.PlayerName,
+			&record.XP,
+			&completedJSON,
+			&scoresJSON,
+			&updatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan sqlite leaderboard: %w", err)
+		}
+		var completed []int
+		var scores map[string]int
+		if err := json.Unmarshal([]byte(completedJSON), &completed); err != nil {
+			return nil, fmt.Errorf("decode sqlite leaderboard missions: %w", err)
+		}
+		if err := json.Unmarshal([]byte(scoresJSON), &scores); err != nil {
+			return nil, fmt.Errorf("decode sqlite leaderboard scores: %w", err)
+		}
+		record.CompletedMissions = len(completed)
+		for _, score := range scores {
+			record.Score += score
+		}
+		record.UpdatedAt, err = time.Parse(time.RFC3339Nano, updatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("decode sqlite leaderboard update time: %w", err)
+		}
+		records = append(records, record)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read sqlite leaderboard: %w", err)
+	}
+	sort.Slice(records, func(i, j int) bool {
+		if records[i].Score != records[j].Score {
+			return records[i].Score > records[j].Score
+		}
+		if records[i].XP != records[j].XP {
+			return records[i].XP > records[j].XP
+		}
+		if !records[i].UpdatedAt.Equal(records[j].UpdatedAt) {
+			return records[i].UpdatedAt.Before(records[j].UpdatedAt)
+		}
+		return records[i].ProfileID < records[j].ProfileID
+	})
+	if len(records) > limit {
+		records = records[:limit]
+	}
+	return records, nil
+}
+
 type sqliteQueryer interface {
 	QueryRowContext(context.Context, string, ...any) *sql.Row
 }
@@ -133,7 +202,7 @@ func loadSQLiteSnapshot(
 	profileID string,
 ) (campaignSnapshot, bool, error) {
 	const query = `
-		SELECT profile_id, wallet, xp, crew_trust, community_support,
+			SELECT profile_id, player_name, wallet, xp, crew_trust, community_support,
 		       completed_levels, best_scores, last_choice, updated_at
 		FROM campaign_saves
 		WHERE profile_id = ?`
@@ -144,6 +213,7 @@ func loadSQLiteSnapshot(
 	var updatedAt string
 	err := queryer.QueryRowContext(ctx, query, profileID).Scan(
 		&snapshot.ProfileID,
+		&snapshot.PlayerName,
 		&snapshot.Wallet,
 		&snapshot.XP,
 		&snapshot.CrewTrust,
@@ -170,6 +240,39 @@ func loadSQLiteSnapshot(
 		return campaignSnapshot{}, false, fmt.Errorf("decode sqlite update time: %w", err)
 	}
 	return snapshot, true, nil
+}
+
+func ensureSQLitePlayerNameColumn(ctx context.Context, db *sql.DB) error {
+	rows, err := db.QueryContext(ctx, "PRAGMA table_info(campaign_saves)")
+	if err != nil {
+		return fmt.Errorf("inspect sqlite campaign schema: %w", err)
+	}
+	found := false
+	for rows.Next() {
+		var cid, notNull, primaryKey int
+		var name, columnType string
+		var defaultValue sql.NullString
+		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
+			rows.Close()
+			return fmt.Errorf("read sqlite campaign schema: %w", err)
+		}
+		if name == "player_name" {
+			found = true
+		}
+	}
+	if err := rows.Close(); err != nil {
+		return fmt.Errorf("close sqlite campaign schema: %w", err)
+	}
+	if found {
+		return nil
+	}
+	if _, err := db.ExecContext(
+		ctx,
+		"ALTER TABLE campaign_saves ADD COLUMN player_name TEXT NOT NULL DEFAULT 'Player'",
+	); err != nil {
+		return fmt.Errorf("add sqlite leaderboard identity: %w", err)
+	}
+	return nil
 }
 
 func sqliteDSN(databaseURL string) (string, error) {

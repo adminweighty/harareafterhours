@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/campaign_snapshot.dart';
+import '../models/leaderboard.dart';
 
 class CampaignSyncException implements Exception {
   const CampaignSyncException(this.message);
@@ -62,6 +63,28 @@ class CampaignSyncService {
       throw CampaignSyncException(_responseMessage(response));
     }
     return CampaignSnapshot.fromJson(_decodeObject(response));
+  }
+
+  Future<LeaderboardResult> loadLeaderboard({
+    required String profileId,
+    int limit = 50,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/v1/leaderboard').replace(
+      queryParameters: <String, String>{
+        'limit': limit.clamp(1, 100).toString(),
+        'profileId': profileId,
+      },
+    );
+    final http.Response response = await _request(
+      () => _client.get(
+        uri,
+        headers: const <String, String>{'Accept': 'application/json'},
+      ),
+    );
+    if (response.statusCode != 200) {
+      throw CampaignSyncException(_responseMessage(response));
+    }
+    return LeaderboardResult.fromJson(_decodeObject(response));
   }
 
   void dispose() {

@@ -13,18 +13,23 @@ The Docker image has a writable `/data` working directory, so it also falls back
 SQLite safely when run without a PostgreSQL URL; mount `/data` if that file should
 survive container replacement.
 
-It deliberately has no authentication, payment processing, or leaderboard logic.
-Use it for local development only until an authenticated profile system is designed.
+It includes a development leaderboard. Players are ranked by the sum of their
+per-mission best scores, then XP. Public responses contain player names, scores,
+XP and completed-mission counts; email addresses are never sent to this API.
+The service still has no authentication, so use it for local or trusted testing
+until account verification, authorization and score attestation are added.
 
 ## Endpoints
 
 - `GET /health`
 - `GET /v1/profiles/{profileId}/campaign`
 - `PUT /v1/profiles/{profileId}/campaign`
+- `GET /v1/leaderboard?limit=50&profileId={profileId}`
 
 The API validates profile IDs, mission levels, scores, bounded counters, and payload
 size. PostgreSQL stores levels as an integer array and scores as JSONB; SQLite stores
-both values as JSON text.
+both values as JSON text. Existing databases are upgraded with the public
+`player_name` column at startup.
 
 For a local browser build without Docker, run `go run ./cmd/api` from this directory.
 For the PostgreSQL stack, run `docker compose up --build` from the project root. The

@@ -31,9 +31,11 @@ device Unity frameworks are different binaries even when both report `arm64`.
 flutter run --dart-define=CAMPAIGN_API_URL=http://localhost:8080
 ```
 
-The app remains playable offline if the API is not running. Open **Profile** to load
-or save the anonymous `tari-demo` development profile. Set a different profile using
-`--dart-define=CAMPAIGN_PROFILE_ID=your-profile-id`.
+The app remains playable offline if the API is not running. Open **Menu → Top
+scores** to set a public player name, optionally enter an email identity, publish
+best scores and compare rankings. Email stays in local preferences; only a one-way
+hash is used as the campaign profile key. For a shared production leaderboard,
+build with `CAMPAIGN_API_URL` pointing to a hosted HTTPS instance of the API.
 
 ## Run the local development API (SQLite)
 

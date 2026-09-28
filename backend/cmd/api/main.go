@@ -15,15 +15,18 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
-	maxCampaignValue = 100_000_000
-	maxChoiceLength  = 500
-	maxRequestBytes  = 1 << 20
+	maxCampaignValue    = 100_000_000
+	maxChoiceLength     = 500
+	maxPlayerNameLength = 32
+	maxRequestBytes     = 1 << 20
 )
 
 var profileIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
@@ -31,8 +34,12 @@ var profileIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
 //go:embed migrations/001_initial.sql
 var initialSchema string
 
+//go:embed migrations/002_leaderboard.sql
+var leaderboardSchema string
+
 type campaignSnapshot struct {
 	ProfileID        string         `json:"profileId"`
+	PlayerName       string         `json:"playerName"`
 	Wallet           int            `json:"wallet"`
 	XP               int            `json:"xp"`
 	CrewTrust        int            `json:"crewTrust"`
@@ -46,6 +53,30 @@ type campaignSnapshot struct {
 type campaignRepository interface {
 	get(context.Context, string) (campaignSnapshot, bool, error)
 	save(context.Context, campaignSnapshot) (campaignSnapshot, error)
+	leaderboard(context.Context, int) ([]leaderboardRecord, error)
+}
+
+type leaderboardRecord struct {
+	ProfileID         string
+	PlayerName        string
+	Score             int
+	XP                int
+	CompletedMissions int
+	UpdatedAt         time.Time
+}
+
+type leaderboardEntry struct {
+	Rank              int    `json:"rank"`
+	PlayerName        string `json:"playerName"`
+	Score             int    `json:"score"`
+	XP                int    `json:"xp"`
+	CompletedMissions int    `json:"completedMissions"`
+	IsCurrentPlayer   bool   `json:"isCurrentPlayer"`
+}
+
+type leaderboardResponse struct {
+	Entries    []leaderboardEntry `json:"entries"`
+	PlayerRank *int               `json:"playerRank,omitempty"`
 }
 
 type campaignStore interface {
@@ -79,6 +110,10 @@ func newPostgresStore(ctx context.Context, databaseURL string) (*postgresStore, 
 		pool.Close()
 		return nil, fmt.Errorf("apply campaign schema: %w", err)
 	}
+	if _, err := store.pool.Exec(ctx, leaderboardSchema); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("apply leaderboard schema: %w", err)
+	}
 	return store, nil
 }
 
@@ -92,7 +127,7 @@ func (s *postgresStore) storageName() string {
 
 func (s *postgresStore) get(ctx context.Context, profileID string) (campaignSnapshot, bool, error) {
 	const query = `
-		SELECT profile_id, wallet, xp, crew_trust, community_support,
+		SELECT profile_id, player_name, wallet, xp, crew_trust, community_support,
 		       completed_levels, best_scores, last_choice, updated_at
 		FROM campaign_saves
 		WHERE profile_id = $1`
@@ -102,6 +137,7 @@ func (s *postgresStore) get(ctx context.Context, profileID string) (campaignSnap
 	var bestScoresJSON []byte
 	err := s.pool.QueryRow(ctx, query, profileID).Scan(
 		&snapshot.ProfileID,
+		&snapshot.PlayerName,
 		&snapshot.Wallet,
 		&snapshot.XP,
 		&snapshot.CrewTrust,
@@ -129,11 +165,12 @@ func (s *postgresStore) get(ctx context.Context, profileID string) (campaignSnap
 func (s *postgresStore) save(ctx context.Context, snapshot campaignSnapshot) (campaignSnapshot, error) {
 	const query = `
 		INSERT INTO campaign_saves (
-			profile_id, wallet, xp, crew_trust, community_support,
+			profile_id, player_name, wallet, xp, crew_trust, community_support,
 			completed_levels, best_scores, last_choice
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)
 		ON CONFLICT (profile_id) DO UPDATE SET
+			player_name = EXCLUDED.player_name,
 			wallet = EXCLUDED.wallet,
 			xp = EXCLUDED.xp,
 			crew_trust = EXCLUDED.crew_trust,
@@ -152,6 +189,7 @@ func (s *postgresStore) save(ctx context.Context, snapshot campaignSnapshot) (ca
 		ctx,
 		query,
 		snapshot.ProfileID,
+		snapshot.PlayerName,
 		snapshot.Wallet,
 		snapshot.XP,
 		snapshot.CrewTrust,
@@ -164,6 +202,40 @@ func (s *postgresStore) save(ctx context.Context, snapshot campaignSnapshot) (ca
 		return campaignSnapshot{}, fmt.Errorf("save campaign: %w", err)
 	}
 	return cloneSnapshot(snapshot), nil
+}
+
+func (s *postgresStore) leaderboard(ctx context.Context, limit int) ([]leaderboardRecord, error) {
+	const query = `
+		SELECT profile_id, player_name, xp, cardinality(completed_levels),
+		       COALESCE((SELECT SUM(value::integer) FROM jsonb_each_text(best_scores)), 0) AS total_score,
+		       updated_at
+		FROM campaign_saves
+		ORDER BY total_score DESC, xp DESC, updated_at ASC, profile_id ASC
+		LIMIT $1`
+	rows, err := s.pool.Query(ctx, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("load leaderboard: %w", err)
+	}
+	defer rows.Close()
+	records := make([]leaderboardRecord, 0, limit)
+	for rows.Next() {
+		var record leaderboardRecord
+		if err := rows.Scan(
+			&record.ProfileID,
+			&record.PlayerName,
+			&record.XP,
+			&record.CompletedMissions,
+			&record.Score,
+			&record.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan leaderboard: %w", err)
+		}
+		records = append(records, record)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read leaderboard: %w", err)
+	}
+	return records, nil
 }
 
 func levelsForDatabase(levels []int) []int32 {
@@ -203,7 +275,51 @@ func (a *api) routes() http.Handler {
 	mux.HandleFunc("GET /health", a.health)
 	mux.HandleFunc("GET /v1/profiles/{profileID}/campaign", a.getCampaign)
 	mux.HandleFunc("PUT /v1/profiles/{profileID}/campaign", a.putCampaign)
+	mux.HandleFunc("GET /v1/leaderboard", a.getLeaderboard)
 	return a.withCORS(a.withNoStore(mux))
+}
+
+func (a *api) getLeaderboard(w http.ResponseWriter, r *http.Request) {
+	limit := 50
+	if rawLimit := r.URL.Query().Get("limit"); rawLimit != "" {
+		parsed, err := strconv.Atoi(rawLimit)
+		if err != nil || parsed < 1 || parsed > 100 {
+			writeError(w, http.StatusBadRequest, errors.New("limit must be between 1 and 100"))
+			return
+		}
+		limit = parsed
+	}
+	viewer := r.URL.Query().Get("profileId")
+	if viewer != "" {
+		if _, err := validateProfileID(viewer); err != nil {
+			writeError(w, http.StatusBadRequest, err)
+			return
+		}
+	}
+	records, err := a.store.leaderboard(r.Context(), limit)
+	if err != nil {
+		log.Printf("load leaderboard: %v", err)
+		writeError(w, http.StatusInternalServerError, errors.New("could not load leaderboard"))
+		return
+	}
+	response := leaderboardResponse{Entries: make([]leaderboardEntry, 0, len(records))}
+	for index, record := range records {
+		rank := index + 1
+		current := viewer != "" && record.ProfileID == viewer
+		response.Entries = append(response.Entries, leaderboardEntry{
+			Rank:              rank,
+			PlayerName:        record.PlayerName,
+			Score:             record.Score,
+			XP:                record.XP,
+			CompletedMissions: record.CompletedMissions,
+			IsCurrentPlayer:   current,
+		})
+		if current {
+			currentRank := rank
+			response.PlayerRank = &currentRank
+		}
+	}
+	writeJSON(w, http.StatusOK, response)
 }
 
 func (a *api) health(w http.ResponseWriter, r *http.Request) {
@@ -307,6 +423,18 @@ func validateSnapshot(snapshot *campaignSnapshot, pathProfileID string) error {
 		return errors.New("payload profile id does not match the request path")
 	}
 	snapshot.ProfileID = pathProfileID
+	snapshot.PlayerName = strings.Join(strings.Fields(snapshot.PlayerName), " ")
+	if snapshot.PlayerName == "" {
+		snapshot.PlayerName = "Player"
+	}
+	if utf8.RuneCountInString(snapshot.PlayerName) > maxPlayerNameLength {
+		return fmt.Errorf("playerName must be %d characters or fewer", maxPlayerNameLength)
+	}
+	for _, character := range snapshot.PlayerName {
+		if unicode.IsControl(character) {
+			return errors.New("playerName cannot contain control characters")
+		}
+	}
 
 	for label, value := range map[string]int{
 		"wallet":           snapshot.Wallet,
