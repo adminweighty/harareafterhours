@@ -1,0 +1,8 @@
+*
+!.dockerignore
+!Dockerfile
+!backend/
+!backend/go.mod
+!backend/go.sum
+!backend/cmd/
+!backend/cmd/**

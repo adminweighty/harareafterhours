@@ -64,3 +64,10 @@ The Go API waits for PostgreSQL to become healthy, applies its campaign schema, 
 persists saves in the `postgres-data` Docker volume. It is not an authenticated
 production service; add identity, authorization, observability, backups, and managed
 database credentials before exposing it publicly.
+
+## Deploy the leaderboard API
+
+The root production `Dockerfile` is ready for Sevalla Application Hosting. Follow
+the [Sevalla deployment guide](docs/sevalla-deployment.md) to connect PostgreSQL,
+configure health checks, and add the resulting HTTPS API address to mobile release
+builds.

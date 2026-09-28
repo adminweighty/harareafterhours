@@ -17,8 +17,15 @@ set +a
 
 : "${ADMOB_ANDROID_APP_ID:?Add ADMOB_ANDROID_APP_ID to .admob.env}"
 : "${ADMOB_ANDROID_BANNER_ID:?Add ADMOB_ANDROID_BANNER_ID to .admob.env}"
+: "${CAMPAIGN_API_URL:?Add the deployed HTTPS CAMPAIGN_API_URL to .admob.env}"
+
+[[ "${CAMPAIGN_API_URL}" == https://* ]] || {
+  print -u2 'CAMPAIGN_API_URL must use HTTPS for a production build.'
+  exit 1
+}
 
 export ORG_GRADLE_PROJECT_ADMOB_ANDROID_APP_ID="${ADMOB_ANDROID_APP_ID}"
 cd "${project_root}"
 "${flutter_bin}" build apk --release \
-  --dart-define="ADMOB_ANDROID_BANNER_ID=${ADMOB_ANDROID_BANNER_ID}"
+  --dart-define="ADMOB_ANDROID_BANNER_ID=${ADMOB_ANDROID_BANNER_ID}" \
+  --dart-define="CAMPAIGN_API_URL=${CAMPAIGN_API_URL}"

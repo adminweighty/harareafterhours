@@ -17,6 +17,12 @@ set +a
 
 : "${ADMOB_IOS_APP_ID:?Add ADMOB_IOS_APP_ID to .admob.env}"
 : "${ADMOB_IOS_BANNER_ID:?Add ADMOB_IOS_BANNER_ID to .admob.env}"
+: "${CAMPAIGN_API_URL:?Add the deployed HTTPS CAMPAIGN_API_URL to .admob.env}"
+
+[[ "${CAMPAIGN_API_URL}" == https://* ]] || {
+  print -u2 'CAMPAIGN_API_URL must use HTTPS for a production build.'
+  exit 1
+}
 
 plist_app_id=$(/usr/libexec/PlistBuddy -c 'Print :GADApplicationIdentifier' "${project_root}/ios/Runner/Info.plist")
 [[ "${plist_app_id}" == "${ADMOB_IOS_APP_ID}" ]] || {
@@ -26,4 +32,5 @@ plist_app_id=$(/usr/libexec/PlistBuddy -c 'Print :GADApplicationIdentifier' "${p
 
 cd "${project_root}"
 "${flutter_bin}" build ios --release --no-pub \
-  --dart-define="ADMOB_IOS_BANNER_ID=${ADMOB_IOS_BANNER_ID}"
+  --dart-define="ADMOB_IOS_BANNER_ID=${ADMOB_IOS_BANNER_ID}" \
+  --dart-define="CAMPAIGN_API_URL=${CAMPAIGN_API_URL}"
