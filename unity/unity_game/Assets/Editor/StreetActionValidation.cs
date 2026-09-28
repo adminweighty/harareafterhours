@@ -35,7 +35,10 @@ namespace HarareAfterHours.EditorTools
                 switch(stage)
                 {
                     case 0:
-                        Check(world.Patrols.Count==2&&world.Actors.Count(a=>!a.Officer)==6,"Two patrols and six robbers");
+                        Check(world.Patrols.Count==2&&world.Actors.Count(a=>!a.Officer)==world.StreetThreatTarget,
+                            "Two patrols and the selected level's full robber population");
+                        Check(world.StreetThreatTarget>=8&&world.StreetThreatsRemaining==world.StreetThreatTarget,
+                            "Level starts with at least eight marked threats and a complete clear target");
                         Check(UnityEngine.Object.FindObjectsByType<VehicleController>(FindObjectsSortMode.None).Length>=6,"Core city vehicle fleet retained");
                         Check(!world.Patrols[0].GetComponent<VehicleController>().TryEnter(game.Player,false),"Patrol seat protected");
                         var indicatorActor=world.SpawnActor(false,new Vector3(120,.2f,121.6f),"Indicator validation robber");
@@ -61,7 +64,9 @@ namespace HarareAfterHours.EditorTools
                         Place(game.Player,new Vector3(120,.2f,120));Place(thug,new Vector3(120,.2f,121.6f));game.Player.transform.rotation=Quaternion.identity;
                         points=game.Progression.Points;
                         for(int i=0;i<3;i++)Check(world.Strike(2.25f),"Melee reaches robber");
-                        Check(thug.Down&&game.Progression.Points==points+50,"Defeat awards 50");world.Strike(2.25f);
+                        Check(thug.Down&&game.Progression.Points==points+50,"Defeat awards 50");
+                        Check(world.StreetThreatsDefeated==1&&world.StreetThreatsRemaining==world.StreetThreatTarget-1,
+                            "Street-level clear progress advances once per roaming threat");world.Strike(2.25f);
                         Check(game.Progression.Points==points+50,"No repeat reward while down");
                         Check(world.Wanted==0,"Defending against robber does not cause wanted");
                         var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.position=new Vector3(120,1,120.8f);wall.transform.localScale=new Vector3(3,3,.2f);Physics.SyncTransforms();
@@ -102,6 +107,11 @@ namespace HarareAfterHours.EditorTools
                         world.RestartEncounter();
                         Check(!world.GameOver&&!game.Player.InputLocked&&world.Health==100,"Explicit restart restores control");
                         report.Add("PASS: live hostile attack causes Game Over; explicit restart restores controls and retains points");
+                        foreach(var target in world.Actors.Where(a=>!a.Officer&&a.name.Contains(" — ")).ToArray())
+                            for(int hit=0;hit<world.Difficulty.EnemyHits;hit++)target.Hit();
+                        Check(world.DifficultyLevelComplete&&world.StreetThreatsRemaining==0,
+                            "Selected difficulty completes only after every roaming threat is defeated");
+                        report.Add("PASS: the selected difficulty clear target reaches completion after every roaming threat is down");
                         var car=world.Patrols[0];Capture(car.transform.position+car.transform.right*4+car.transform.forward*4+Vector3.up*2,car.transform.position+Vector3.up,"police-car.png");
                         Finish(0);break;
                 }

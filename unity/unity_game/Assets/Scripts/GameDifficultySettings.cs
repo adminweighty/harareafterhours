@@ -23,10 +23,13 @@ namespace HarareAfterHours
         public readonly float MeleeCooldown;
         public readonly float RangedWindup;
         public readonly float RangedCooldown;
+        public readonly int StreetEnemyCount;
+        public readonly int MissionEnemyBonus;
 
         public DifficultyProfile(int enemyHits, float incomingDamage, float healthRecovery,
             float engageRange, float disengageRange, float enemySpeed, float meleeWindup,
-            float meleeCooldown, float rangedWindup, float rangedCooldown)
+            float meleeCooldown, float rangedWindup, float rangedCooldown,
+            int streetEnemyCount, int missionEnemyBonus)
         {
             EnemyHits = enemyHits;
             IncomingDamage = incomingDamage;
@@ -38,6 +41,8 @@ namespace HarareAfterHours
             MeleeCooldown = meleeCooldown;
             RangedWindup = rangedWindup;
             RangedCooldown = rangedCooldown;
+            StreetEnemyCount = streetEnemyCount;
+            MissionEnemyBonus = missionEnemyBonus;
         }
     }
 
@@ -64,11 +69,11 @@ namespace HarareAfterHours
                 switch (Current)
                 {
                     case GameDifficulty.Beginner:
-                        return new DifficultyProfile(2, .65f, 4.5f, 10f, 21f, 2.65f, 1.05f, 1.65f, 1.15f, 2.35f);
+                        return new DifficultyProfile(2, .65f, 4.5f, 10f, 21f, 2.65f, 1.05f, 1.65f, 1.15f, 2.35f, 8, 0);
                     case GameDifficulty.Expert:
-                        return new DifficultyProfile(4, 1.35f, 1.8f, 16f, 31f, 3.55f, .58f, .85f, .62f, 1.25f);
+                        return new DifficultyProfile(4, 1.35f, 1.8f, 16f, 31f, 3.55f, .58f, .85f, .62f, 1.25f, 14, 2);
                     default:
-                        return new DifficultyProfile(3, 1f, 3f, 12f, 25f, 3.1f, .8f, 1.2f, .85f, 1.8f);
+                        return new DifficultyProfile(3, 1f, 3f, 12f, 25f, 3.1f, .8f, 1.2f, .85f, 1.8f, 11, 1);
                 }
             }
         }

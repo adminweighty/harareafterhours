@@ -1075,9 +1075,11 @@ class _DifficultySelector extends StatelessWidget {
         SizedBox(height: compact ? 3 : 6),
         Text(
           switch (selected) {
-            'Beginner' => 'More recovery · slower enemies · two-hit takedowns',
-            'Expert' => 'Faster threats · longer pursuit · four-hit takedowns',
-            _ => 'Balanced combat · three-hit takedowns',
+            'Beginner' =>
+              '8 marked threats · slower enemies · two-hit takedowns',
+            'Expert' =>
+              '14 marked threats · +2 mission enemies · four-hit takedowns',
+            _ => '11 marked threats · +1 mission enemy · balanced combat',
           },
           style: const TextStyle(
             color: Color(0xFFAFC6C2),

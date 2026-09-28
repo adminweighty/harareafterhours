@@ -9,6 +9,7 @@ namespace HarareAfterHours
         public static StreetActionDirector Instance { get; private set; }
         public readonly List<StreetActor> Actors = new();
         public readonly List<PolicePatrol> Patrols = new();
+        readonly List<StreetActor> _streetThreats = new();
         public ThirdPersonController Player { get; private set; }
         public int Wanted { get; private set; }
         public float Health { get; private set; } = 100;
@@ -24,9 +25,15 @@ namespace HarareAfterHours
                 foreach(var actor in Actors)
                     if(!actor.Officer&&!actor.Down&&Vector3.Distance(actor.transform.position,Player.transform.position)<16)
                         return actor.WindingUp?"INCOMING · PUNCH, KICK or MOVE AWAY":"HOSTILE · PUNCH is fast · KICK hits harder";
-                return "Marked hostile +50 · civilians give no points";
+                return DifficultyLevelComplete
+                    ? DifficultyLevel.ToString().ToUpperInvariant()+" LEVEL CLEAR · choose another level in Menu"
+                    : DifficultyLevel.ToString().ToUpperInvariant()+" · stop "+StreetThreatsRemaining+" marked threats";
             }
         }
+        public int StreetThreatTarget => Difficulty.StreetEnemyCount;
+        public int StreetThreatsDefeated { get; private set; }
+        public int StreetThreatsRemaining => Mathf.Max(0,StreetThreatTarget-StreetThreatsDefeated);
+        public bool DifficultyLevelComplete { get; private set; }
         public float Capture { get; private set; }
         public float HiddenSeconds { get; private set; }
         public Vector3 LastKnownPosition { get; private set; }
@@ -41,9 +48,10 @@ namespace HarareAfterHours
         string _notice;
         PlayerProgression _score;
         FlutterGameBridge _bridge;
-        public string Status => GameOver ? "GAME OVER" : Arrested ? "CUFFED · release in " + Mathf.CeilToInt(ReleaseAt-Time.time)+"s"
+        public string Status => (GameOver ? "GAME OVER" : Arrested ? "CUFFED · release in " + Mathf.CeilToInt(ReleaseAt-Time.time)+"s"
             : Wanted>0 ? "ZRP " + new string('*',Wanted) + (HiddenSeconds>0?" · SEARCH "+Mathf.CeilToInt(12-HiddenSeconds)+"s":" · PURSUIT")
-            : "HEALTH "+Mathf.CeilToInt(Health)+" · FREE ROAM";
+            : "HEALTH "+Mathf.CeilToInt(Health)+" · FREE ROAM")+
+            $" · {DifficultyLevel.ToString().ToUpperInvariant()} {StreetThreatsDefeated}/{StreetThreatTarget}";
 
         public void Configure(ThirdPersonController player, PlayerProgression score, FlutterGameBridge bridge)
         {
@@ -58,14 +66,54 @@ namespace HarareAfterHours
                 var traffic=car.GetComponent<TrafficVehicle>();if(traffic!=null)Destroy(traffic);
                 var patrol=car.AddComponent<PolicePatrol>();patrol.Configure(this,i);Patrols.Add(patrol);
             }
-            SpawnActor(false,new Vector3(7.8f,.2f,18),"Street robber — First Street");
-            SpawnActor(false,new Vector3(-7.8f,.2f,-25),"Street robber — south block");
-            SpawnActor(false,new Vector3(34,.2f,7.8f),"Armed robber — east block").Arm();
-            SpawnActor(false,JoinaCityBlock.Spawn+new Vector3(0,0,35),"Armed robber — Joina approach").Arm();
-            SpawnActor(false,new Vector3(13,.2f,24),"Street robber — trader block");
-            SpawnActor(false,new Vector3(-33,.2f,-7.8f),"Street robber — market approach");
+            EnsureStreetThreatPopulation();
             SpawnActor(true,new Vector3(-7.8f,.2f,3),"ZRP foot patrol");
         }
+        void EnsureStreetThreatPopulation()
+        {
+            int target=StreetThreatTarget;
+            while(_streetThreats.Count>target)
+            {
+                var actor=_streetThreats[_streetThreats.Count-1];
+                _streetThreats.RemoveAt(_streetThreats.Count-1);Actors.Remove(actor);
+                if(actor!=null)Destroy(actor.gameObject);
+            }
+            while(_streetThreats.Count<target)
+            {
+                int index=_streetThreats.Count;
+                var actor=SpawnActor(false,StreetThreatPosition(index),StreetThreatName(index));
+                if(StreetThreatIsArmed(index))actor.Arm();
+                _streetThreats.Add(actor);
+            }
+        }
+        static Vector3 StreetThreatPosition(int index)=>index switch
+        {
+            0 => new Vector3(7.8f,.2f,18),
+            1 => new Vector3(-7.8f,.2f,-25),
+            2 => new Vector3(34,.2f,7.8f),
+            3 => JoinaCityBlock.Spawn+new Vector3(0,0,35),
+            4 => new Vector3(13,.2f,24),
+            5 => new Vector3(-33,.2f,-7.8f),
+            6 => new Vector3(7.8f,.2f,45),
+            7 => new Vector3(-7.8f,.2f,43),
+            8 => new Vector3(49,.2f,7.8f),
+            9 => new Vector3(-47,.2f,-7.8f),
+            10 => new Vector3(7.8f,.2f,-54),
+            11 => new Vector3(-7.8f,.2f,60),
+            12 => new Vector3(58,.2f,-7.8f),
+            _ => new Vector3(-58,.2f,7.8f),
+        };
+        static string StreetThreatName(int index)=>index switch
+        {
+            0 => "Street robber — First Street",
+            1 => "Street robber — south block",
+            2 => "Armed robber — east block",
+            3 => "Armed robber — Joina approach",
+            4 => "Street robber — trader block",
+            5 => "Street robber — market approach",
+            _ => (StreetThreatIsArmed(index)?"Armed robber":"Street robber")+" — patrol "+(index+1),
+        };
+        static bool StreetThreatIsArmed(int index)=>index==2||index==3||index==6||index==9||index>=12;
         public StreetActor SpawnActor(bool officer,Vector3 position,string label)
         {
             var root=new GameObject(label);root.transform.SetParent(transform);root.transform.position=position;
@@ -165,6 +213,7 @@ namespace HarareAfterHours
             GameOver=false;Health=100;Wanted=0;Capture=0;HiddenSeconds=0;Arrested=false;
             _lastDamage=-100;
             TakedownUntil=0;TakedownText="";
+            StreetThreatsDefeated=0;DifficultyLevelComplete=false;
             foreach(var actor in Actors)actor.ResetEncounter();
             Relocate(JoinaCityBlock.WelcomePending ? JoinaCityBlock.Spawn : new Vector3(4.5f,.3f,-8.5f));
             Player.InputLocked=false;Player.GetComponentInChildren<StreetActionPose>()?.SetDown(false);
@@ -176,8 +225,15 @@ namespace HarareAfterHours
         public int Rob()=>_score.SpendPoints(40,"robbed");
         public bool SetDifficulty(string value)
         {
+            GameDifficulty previous=DifficultyLevel;
             if(!GameDifficultySettings.Apply(value))return false;
-            Notify("LEVEL · "+DifficultyLevel.ToString().ToUpperInvariant()+" · combat adjusted");
+            if(previous!=DifficultyLevel)
+            {
+                EnsureStreetThreatPopulation();
+                StreetThreatsDefeated=0;DifficultyLevelComplete=false;
+                foreach(var actor in _streetThreats)if(actor!=null)actor.ResetEncounter();
+            }
+            Notify("LEVEL · "+DifficultyLevel.ToString().ToUpperInvariant()+" · "+StreetThreatTarget+" marked threats");
             return true;
         }
         public void Defeated(StreetActor actor,int recovered)
@@ -186,7 +242,19 @@ namespace HarareAfterHours
             int before=_score.Points;
             _score.AwardMissionStep("hostile_defeated_v1_"+actor.name,50);
             int earned=_score.Points-before;
-            Notify(earned>0?"HOSTILE DEFEATED · +50 POINTS":"HOSTILE DEFEATED · reward already collected");
+            if(_streetThreats.Contains(actor)&&!DifficultyLevelComplete)
+            {
+                StreetThreatsDefeated=Mathf.Min(StreetThreatTarget,StreetThreatsDefeated+1);
+                DifficultyLevelComplete=StreetThreatsDefeated>=StreetThreatTarget;
+                if(DifficultyLevelComplete)
+                {
+                    Notify(DifficultyLevel.ToString().ToUpperInvariant()+" LEVEL CLEAR · all marked threats defeated");
+                    _bridge?.Publish("difficulty_level_complete","{\"difficulty\":\""+DifficultyLevel+"\",\"defeated\":"+StreetThreatsDefeated+"}");
+                    return;
+                }
+            }
+            string progress=_streetThreats.Contains(actor)?$" · {StreetThreatsDefeated}/{StreetThreatTarget}":"";
+            Notify(earned>0?"HOSTILE DEFEATED · +50 POINTS"+progress:"HOSTILE DEFEATED · reward already collected"+progress);
         }
         public void RegisterShotTakedown(StreetActor actor)
         {

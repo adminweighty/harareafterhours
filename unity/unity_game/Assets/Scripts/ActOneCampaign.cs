@@ -169,6 +169,8 @@ namespace HarareAfterHours
         public int PhaseIndex => Active ? _save.phase : -1;
         public int WaypointIndex => Active ? _save.waypoint : -1;
         public int ActiveEnemyCount => _missionEnemies.Count(actor=>actor!=null&&!actor.Down);
+        public int CombatEnemyTarget => Active && !Completed && Current.Kind==PhaseKind.Combat
+            ? Current.Enemies+GameDifficultySettings.Profile.MissionEnemyBonus : 0;
         Phase Current => Active ? _definition.Phases[Mathf.Clamp(_save.phase,0,3)] : null;
         Vector3 CurrentPoint => Current.Points[Mathf.Clamp(_save.waypoint,0,Current.Points.Length-1)];
         public Vector3 PrimaryChoicePosition => Active && !Completed && Current.Kind==PhaseKind.Choice ? Current.Points[0] : ObjectivePosition;
@@ -177,15 +179,26 @@ namespace HarareAfterHours
         public string CheckpointId => Active ? $"m{Level:00}_phase_{_save.phase}_{_save.waypoint}" : "";
         public Vector3 ObjectivePosition => Active && !Completed ? CurrentPoint : _player.transform.position;
         public int DistanceMetres => Active && !Completed ? Mathf.CeilToInt(Vector3.Distance(_player.transform.position,CurrentPoint)) : 0;
-        public string ObjectiveText => Completed ? $"M{Level:00} complete · next mission pending" : Active ?
-            (Current.Kind==PhaseKind.Choice ? $"{Current.Objective} · A {Current.Primary} / B {Current.Secondary}" :
-            Current.Objective + (Current.Points.Length>1 ? $" · {_save.waypoint+1}/{Current.Points.Length}" : "")) : "";
+        public string ObjectiveText
+        {
+            get
+            {
+                if(Completed)return $"M{Level:00} complete · next mission pending";
+                if(!Active)return "";
+                string objective=Current.Kind==PhaseKind.Choice
+                    ? $"{Current.Objective} · A {Current.Primary} / B {Current.Secondary}"
+                    : Current.Objective+(Current.Points.Length>1?$" · {_save.waypoint+1}/{Current.Points.Length}":"");
+                if(Current.Kind==PhaseKind.Combat&&_combatSpawned)
+                    objective+=$" · {ActiveEnemyCount}/{CombatEnemyTarget} threats remain";
+                return objective;
+            }
+        }
         public string ControlHint => Completed ? "Mission saved · open Menu for campaign status" : !Active ? "" : Current.Kind switch
         {
             PhaseKind.Drive when !_player.IsDriving => "Stand beside a stopped car · tap USE to drive",
             PhaseKind.Drive => "Follow the gold marker · brake below 5 km/h",
             PhaseKind.Combat when !_combatSpawned => "Reach the marked encounter boundary",
-            PhaseKind.Combat => Current.Hint,
+            PhaseKind.Combat => Current.Hint+$" · {ActiveEnemyCount} remaining",
             PhaseKind.Choice => $"A: {Current.Primary} · B: {Current.Secondary} · stand in a ring and tap {Current.Action}",
             _ => Current.Hint,
         };
@@ -276,15 +289,16 @@ namespace HarareAfterHours
         {
             _combatSpawned=true;
             var director=StreetActionDirector.Instance;
-            for(int i=0;i<phase.Enemies;i++)
+            int enemyCount=phase.Enemies+GameDifficultySettings.Profile.MissionEnemyBonus;
+            for(int i=0;i<enemyCount;i++)
             {
-                float angle=i*Mathf.PI*2/Mathf.Max(1,phase.Enemies);
+                float angle=i*Mathf.PI*2/Mathf.Max(1,enemyCount);
                 var at=CurrentPoint+new Vector3(Mathf.Cos(angle)*4,0,Mathf.Sin(angle)*4);
                 var actor=director.SpawnActor(false,at,$"M{Level:00} active threat {i+1}");
                 if(phase.Armed)actor.Arm();
                 _missionEnemies.Add(actor);
             }
-            StreetActionDirector.Instance?.Notify(phase.Armed?"ARMED THREATS · use cover":"BRAWLER · punch or kick");
+            StreetActionDirector.Instance?.Notify((phase.Armed?"ARMED THREATS · use cover":"BRAWLERS · punch or kick")+$" · defeat all {enemyCount}");
         }
 
         void Complete()
