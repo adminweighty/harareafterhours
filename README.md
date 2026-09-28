@@ -21,6 +21,16 @@ zsh tool/prepare_ios_device.sh
 The script uses the repository's `unity/unity_game/` project by default.
 `UNITY_PROJECT` can still override it when diagnosing a separate checkout.
 
+Build a signed App Store IPA for the Weighty Premier Solutions team:
+
+```bash
+zsh tool/build_app_store_ipa.sh
+```
+
+The script exports current Unity gameplay for physical iOS, creates the Flutter
+release archive without development signing, and then signs the IPA with the
+App Store distribution profile. The result is written to `build/ios/ipa/`.
+
 ## Run the Flutter app
 
 For the Unity game on a physical iPhone, first follow
