@@ -82,6 +82,8 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a photo to personalize your local game character.</string>
 	<key>UIApplicationSceneManifest</key>
