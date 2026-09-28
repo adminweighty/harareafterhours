@@ -23,7 +23,7 @@ class CampaignSyncService {
 
   static const String _defaultBaseUrl = String.fromEnvironment(
     'CAMPAIGN_API_URL',
-    defaultValue: 'http://localhost:8080',
+    defaultValue: 'https://harareafterhours-b3o9m.sevalla.app',
   );
 
   final http.Client _client;
