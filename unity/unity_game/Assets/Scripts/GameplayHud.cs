@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,6 +19,8 @@ namespace HarareAfterHours
         private GUIStyle _titleStyle;
         private GUIStyle _bodyStyle;
         private GUIStyle _buttonStyle;
+        private readonly List<StreetActor> _hostileBuffer = new();
+        private readonly List<Rect> _hostileLabelRects = new();
 
         public void Configure(
             ThirdPersonController player,
@@ -120,32 +123,75 @@ namespace HarareAfterHours
             var world=StreetActionDirector.Instance;var camera=Camera.main;
             if(world==null||camera==null||world.GameOver)return;
             float s=TouchGameplayControls.Instance.Scale;Rect safe=TouchGameplayControls.Instance.Safe;
+            _hostileBuffer.Clear();_hostileLabelRects.Clear();
             foreach(var actor in world.Actors)
+                if(!actor.Officer&&!actor.Down&&actor.isActiveAndEnabled)_hostileBuffer.Add(actor);
+            _hostileBuffer.Sort((a,b)=>Vector3.SqrMagnitude(a.transform.position-_player.transform.position)
+                .CompareTo(Vector3.SqrMagnitude(b.transform.position-_player.transform.position)));
+            int leftCount=0,rightCount=0,visibleCount=0;
+            float leftNearest=float.MaxValue,rightNearest=float.MaxValue;
+            foreach(var actor in _hostileBuffer)
             {
-                if(actor.Officer||actor.Down||!actor.isActiveAndEnabled)continue;
                 float distance=Vector3.Distance(_player.transform.position,actor.transform.position);
                 Vector3 screen=camera.WorldToScreenPoint(actor.transform.position+Vector3.up*2.9f);
                 bool behind=screen.z<=0;
-                if(behind){screen.x=Screen.width-screen.x;screen.y=Screen.height-screen.y;}
                 float halfWidth=78*s;
-                float x=Mathf.Clamp(screen.x,safe.xMin+halfWidth,safe.xMax-halfWidth);
-                float y=Mathf.Clamp(Screen.height-screen.y-14*s,safe.yMin+8*s,safe.yMax-38*s);
-                bool edge=behind||Mathf.Abs(x-screen.x)>1||Mathf.Abs(y-(Screen.height-screen.y-14*s))>1;
-                if (behind)
+                float rawY=Screen.height-screen.y-14*s;
+                bool edge=behind||screen.x<safe.xMin+halfWidth||screen.x>safe.xMax-halfWidth||
+                    rawY<safe.yMin+8*s||rawY>safe.yMax-38*s||visibleCount>=6;
+                if(edge)
                 {
-                    x = Vector3.Dot(camera.transform.right, actor.transform.position-camera.transform.position) < 0
-                        ? safe.xMin+halfWidth : safe.xMax-halfWidth;
-                    y = safe.center.y;
+                    bool left=behind
+                        ? Vector3.Dot(camera.transform.right,actor.transform.position-camera.transform.position)<0
+                        : screen.x<safe.center.x;
+                    if(left){leftCount++;leftNearest=Mathf.Min(leftNearest,distance);}
+                    else{rightCount++;rightNearest=Mathf.Min(rightNearest,distance);}
+                    continue;
                 }
+                float x=Mathf.Clamp(screen.x,safe.xMin+halfWidth,safe.xMax-halfWidth);
+                float y=Mathf.Clamp(rawY,safe.yMin+8*s,safe.yMax-38*s);
                 bool covered = actor.GetComponent<HostileIndicator>()?.HasClearView == false;
                 Rect label=new(x-halfWidth,y,156*s,28*s);
+                float initialY=label.y;
+                for(int attempt=0;attempt<6&&OverlapsHostileLabel(label);attempt++)
+                {
+                    label.y=initialY+(attempt+1)*30*s;
+                    if(label.yMax>safe.yMax-8*s)label.y=initialY-(attempt+1)*30*s;
+                    label.y=Mathf.Clamp(label.y,safe.yMin+8*s,safe.yMax-label.height-8*s);
+                }
+                if(OverlapsHostileLabel(label))
+                {
+                    if(screen.x<safe.center.x){leftCount++;leftNearest=Mathf.Min(leftNearest,distance);}
+                    else{rightCount++;rightNearest=Mathf.Min(rightNearest,distance);}
+                    continue;
+                }
+                _hostileLabelRects.Add(label);visibleCount++;
                 Color previous=GUI.color;GUI.color=new Color(.3f,.04f,.025f,.9f);GUI.DrawTexture(label,Texture2D.whiteTexture);GUI.color=previous;
                 var style=new GUIStyle(_bodyStyle){alignment=TextAnchor.MiddleCenter,fontSize=Mathf.RoundToInt(12*s)};
                 string threat=actor.WindingUp||actor.GetComponent<HostileFirearm>()?.Aiming==true
                     ?"! INCOMING · TAKE COVER !"
-                    :(edge ? "OFFSCREEN" : covered ? "BEHIND COVER" : distance > 80 ? "DISTANT THIEF" : actor.Armed ? "ARMED THIEF" : "THIEF")+" · "+Mathf.RoundToInt(distance)+" m";
+                    :(covered ? "BEHIND COVER" : distance > 80 ? "DISTANT THIEF" : actor.Armed ? "ARMED THIEF" : "THIEF")+" · "+Mathf.RoundToInt(distance)+" m";
                 GUI.Label(label,threat,style);
             }
+            DrawThreatEdgeSummary(safe,s,true,leftCount,leftNearest);
+            DrawThreatEdgeSummary(safe,s,false,rightCount,rightNearest);
+        }
+
+        private bool OverlapsHostileLabel(Rect candidate)
+        {
+            foreach(var existing in _hostileLabelRects)if(existing.Overlaps(candidate))return true;
+            return false;
+        }
+
+        private void DrawThreatEdgeSummary(Rect safe,float scale,bool left,int count,float nearest)
+        {
+            if(count<=0)return;
+            float width=168*scale,height=30*scale;
+            Rect badge=new(left?safe.xMin+8*scale:safe.xMax-width-8*scale,safe.center.y-height*.5f,width,height);
+            Color previous=GUI.color;GUI.color=new Color(.3f,.04f,.025f,.92f);GUI.DrawTexture(badge,Texture2D.whiteTexture);GUI.color=previous;
+            var style=new GUIStyle(_bodyStyle){alignment=TextAnchor.MiddleCenter,fontSize=Mathf.RoundToInt(12*scale)};
+            string distance=nearest<float.MaxValue?" · "+Mathf.RoundToInt(nearest)+" m":"";
+            GUI.Label(badge,left?$"◀ {count} THREAT{(count==1?"":"S")}{distance}":$"{count} THREAT{(count==1?"":"S")}{distance} ▶",style);
         }
 
         private void DrawShooterHud()
