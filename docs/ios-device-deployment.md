@@ -22,7 +22,7 @@ below refers to the earlier build, not this update. See
   at 14:34 on September 25. The device became unavailable during the follow-up
   process check, so sustained runtime and gameplay validation remain pending.
 
-Runner uses bundle ID `com.weighty.harareafterhours` and team
+Runner uses bundle ID `com.weighty.hararenights` and team
 `HQCMK42CYC` (Udean Mbano, Personal Team), explicitly selected by the user.
 Automatic signing is explicit for Debug, Profile and Release. The
 embedded Unity framework is signed by Runner's existing CodeSignOnCopy phase.

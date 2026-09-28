@@ -1,4 +1,4 @@
-package com.weighty.harare_after_hours
+package com.weighty.hararenights
 
 import io.flutter.embedding.android.FlutterActivity
 
