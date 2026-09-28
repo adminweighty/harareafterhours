@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sort"
@@ -55,6 +56,43 @@ func TestCampaignRoundTripUsesRepository(t *testing.T) {
 	}
 	if saved.Wallet != 1200 || len(saved.CompletedLevels) != 2 || saved.CompletedLevels[0] != 1 || saved.UpdatedAt.IsZero() {
 		t.Fatalf("unexpected saved campaign: %#v", saved)
+	}
+}
+
+func TestPublicPagesAreServedAsHTML(t *testing.T) {
+	server := httptest.NewServer((&api{store: newMemoryStore(), corsOrigin: "*"}).routes())
+	defer server.Close()
+
+	tests := []struct {
+		path string
+		text string
+	}{
+		{path: "/", text: "Harare Nights"},
+		{path: "/privacy", text: "Privacy Policy"},
+		{path: "/privacy-policy", text: "Privacy Policy"},
+		{path: "/support", text: "Email support"},
+	}
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			response, err := http.Get(server.URL + test.path)
+			if err != nil {
+				t.Fatalf("get public page: %v", err)
+			}
+			defer response.Body.Close()
+			if response.StatusCode != http.StatusOK {
+				t.Fatalf("status = %d", response.StatusCode)
+			}
+			if contentType := response.Header.Get("Content-Type"); contentType != "text/html; charset=utf-8" {
+				t.Fatalf("content type = %q", contentType)
+			}
+			body, err := io.ReadAll(response.Body)
+			if err != nil {
+				t.Fatalf("read page: %v", err)
+			}
+			if !bytes.Contains(body, []byte(test.text)) {
+				t.Fatalf("page does not contain %q", test.text)
+			}
+		})
 	}
 }
 

@@ -37,6 +37,15 @@ var initialSchema string
 //go:embed migrations/002_leaderboard.sql
 var leaderboardSchema string
 
+//go:embed web/index.html
+var homePage []byte
+
+//go:embed web/privacy.html
+var privacyPage []byte
+
+//go:embed web/support.html
+var supportPage []byte
+
 type campaignSnapshot struct {
 	ProfileID        string         `json:"profileId"`
 	PlayerName       string         `json:"playerName"`
@@ -272,11 +281,27 @@ type api struct {
 
 func (a *api) routes() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", a.home)
+	mux.HandleFunc("GET /privacy", a.privacy)
+	mux.HandleFunc("GET /privacy-policy", a.privacy)
+	mux.HandleFunc("GET /support", a.support)
 	mux.HandleFunc("GET /health", a.health)
 	mux.HandleFunc("GET /v1/profiles/{profileID}/campaign", a.getCampaign)
 	mux.HandleFunc("PUT /v1/profiles/{profileID}/campaign", a.putCampaign)
 	mux.HandleFunc("GET /v1/leaderboard", a.getLeaderboard)
 	return a.withCORS(a.withNoStore(mux))
+}
+
+func (a *api) home(w http.ResponseWriter, _ *http.Request) {
+	writeHTML(w, homePage)
+}
+
+func (a *api) privacy(w http.ResponseWriter, _ *http.Request) {
+	writeHTML(w, privacyPage)
+}
+
+func (a *api) support(w http.ResponseWriter, _ *http.Request) {
+	writeHTML(w, supportPage)
 }
 
 func (a *api) getLeaderboard(w http.ResponseWriter, r *http.Request) {
@@ -501,6 +526,17 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(value); err != nil {
 		log.Printf("write json response: %v", err)
+	}
+}
+
+func writeHTML(w http.ResponseWriter, page []byte) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'self'")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(page); err != nil {
+		log.Printf("write html response: %v", err)
 	}
 }
 

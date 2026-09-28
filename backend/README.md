@@ -21,6 +21,10 @@ until account verification, authorization and score attestation are added.
 
 ## Endpoints
 
+- `GET /` — Harare Nights web landing page
+- `GET /privacy` — App Store and Play Store privacy policy
+- `GET /privacy-policy` — privacy policy alias
+- `GET /support` — player support page
 - `GET /health`
 - `GET /v1/profiles/{profileId}/campaign`
 - `PUT /v1/profiles/{profileId}/campaign`
